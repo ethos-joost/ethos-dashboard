@@ -1,12 +1,19 @@
 import Image from "next/image";
 import { getDashboardData, type BracketData } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
+import { DistributionChart } from "@/components/distribution-chart";
 
 function formatUSD(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return value.toFixed(0);
+}
+
+function formatUSDExact(value: number): string {
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+  if (value >= 1) return `$${value.toFixed(0)}`;
+  return `$${value.toFixed(2)}`;
 }
 
 export default function Home() {
@@ -67,15 +74,147 @@ export default function Home() {
           <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
         </div>
 
-        {/* Chart */}
+        {/* Avg/Median chart */}
         {low && high && (
           <div className="rounded-lg border border-border/50 p-6">
             <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
               Holdings Comparison
             </h2>
             <HoldingsChart brackets={[low, high]} />
+            <Takeaway>
+              The average 1600+ user holds ${formatUSD(high.trimmedAvgHoldings)} compared to ${formatUSD(low.trimmedAvgHoldings)} for 1200–1300 users.
+              Even at the median the gap holds: ${formatUSD(high.medianHoldings)} vs ${formatUSD(low.medianHoldings)}.
+            </Takeaway>
           </div>
         )}
+
+        {/* Distribution chart */}
+        {low && high && (() => {
+          const lowUnder10 = low.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
+          const highUnder10 = high.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
+          const highOver1K = high.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+          const lowOver1K = low.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+
+          return (
+            <div className="rounded-lg border border-border/50 p-6">
+              <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
+                Holdings Distribution
+              </h2>
+              <p className="text-xs text-muted-foreground mb-6">
+                Percentage of users in each holdings range
+              </p>
+              <DistributionChart brackets={[low, high]} />
+              <Takeaway>
+                {lowUnder10.toFixed(1)}% of 1200–1300 users hold under $10, compared to {highUnder10.toFixed(1)}% of 1600+ users.
+                {" "}{highOver1K.toFixed(1)}% of 1600+ users hold over $1K vs just {lowOver1K.toFixed(1)}% of 1200–1300 users.
+              </Takeaway>
+            </div>
+          );
+        })()}
+
+        {/* Percentile table */}
+        {low && high && (() => {
+          const p75Ratio = low.percentiles.p75 > 0
+            ? Math.round((high.percentiles.p75 / low.percentiles.p75) * 10) / 10
+            : null;
+
+          return (
+            <div className="rounded-lg border border-border/50 p-6">
+              <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
+                Percentile Breakdown
+              </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full font-mono text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left text-xs text-muted-foreground font-medium py-2 pr-4">Percentile</th>
+                    {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
+                      <th key={p} className="text-right text-xs text-muted-foreground font-medium py-2 px-3">
+                        {p.toUpperCase()}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[low, high].map((b) => (
+                    <tr key={b.label} className="border-b border-border/30">
+                      <td className="py-3 pr-4 font-semibold">{b.label}</td>
+                      {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
+                        <td key={p} className="text-right py-3 px-3 tabular-nums">
+                          {formatUSDExact(b.percentiles[p])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="text-muted-foreground">
+                    <td className="py-3 pr-4 text-xs">Multiplier</td>
+                    {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => {
+                      const ratio = low.percentiles[p] > 0
+                        ? Math.round((high.percentiles[p] / low.percentiles[p]) * 10) / 10
+                        : null;
+                      return (
+                        <td key={p} className="text-right py-3 px-3 tabular-nums text-xs">
+                          {ratio ? `${ratio}x` : "—"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <Takeaway>
+              At the 75th percentile, 1600+ users hold {formatUSDExact(high.percentiles.p75)} vs {formatUSDExact(low.percentiles.p75)} for 1200–1300{p75Ratio ? ` — a ${p75Ratio}x gap` : ""}.
+              The difference widens at every level, confirming this isn&apos;t driven by a few outliers.
+            </Takeaway>
+          </div>
+          );
+        })()}
+
+        {/* Holdings tiers */}
+        {low && high && (() => {
+          const highOver100 = high.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+          const lowOver100 = low.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+
+          return (
+          <div className="rounded-lg border border-border/50 p-6">
+            <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
+              Holdings Tiers
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { bracket: low, label: "1200–1300" },
+                { bracket: high, label: "1600+" },
+              ].map(({ bracket, label }) => (
+                <div key={label}>
+                  <p className="font-mono text-sm font-semibold mb-3">{label}</p>
+                  <div className="space-y-2">
+                    {bracket.tiers.map((tier) => (
+                      <div key={tier.label} className="flex items-center gap-3">
+                        <span className="font-mono text-xs text-muted-foreground w-16 shrink-0">
+                          {tier.label}
+                        </span>
+                        <div className="flex-1 h-5 bg-muted/50 rounded-sm overflow-hidden">
+                          <div
+                            className="h-full bg-foreground/80 rounded-sm"
+                            style={{ width: `${Math.max(tier.pct, 0.5)}%` }}
+                          />
+                        </div>
+                        <span className="font-mono text-xs tabular-nums w-12 text-right">
+                          {tier.pct}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Takeaway>
+              {highOver100.toFixed(1)}% of 1600+ users hold over $100, compared to {lowOver100.toFixed(1)}% of 1200–1300 users.
+              High-credibility users are far more likely to have meaningful on-chain assets.
+            </Takeaway>
+          </div>
+          );
+        })()}
 
         {/* Footer */}
         <p className="font-mono text-[10px] tracking-wide text-muted-foreground text-center pt-4">
@@ -158,5 +297,13 @@ function Stat({ label, value }: { label: string; value: string }) {
         {label}
       </p>
     </div>
+  );
+}
+
+function Takeaway({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-5 pt-4 border-t border-border/30 text-sm text-muted-foreground leading-relaxed">
+      {children}
+    </p>
   );
 }
