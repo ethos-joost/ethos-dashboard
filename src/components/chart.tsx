@@ -20,7 +20,7 @@ function formatUSD(value: number): string {
 export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
   const data = brackets.map((b) => ({
     name: b.label,
-    "Avg (trimmed)": b.trimmedAvgHoldings,
+    Avg: b.trimmedAvgHoldings,
     Median: b.medianHoldings,
   }));
 
@@ -59,7 +59,7 @@ export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
           }}
         />
         <Bar
-          dataKey="Avg (trimmed)"
+          dataKey="Avg"
           fill="hsl(0 0% 9%)"
           radius={[3, 3, 0, 0]}
         />

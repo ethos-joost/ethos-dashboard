@@ -36,7 +36,7 @@ export default function Home() {
               Key Insight
             </p>
             <p className="text-3xl font-light leading-snug text-foreground">
-              Users with score{" "}
+              On average users with score{" "}
               <span className="font-semibold">1600+</span> have{" "}
               <span className="font-mono font-bold text-4xl">{multiplier}x</span>{" "}
               the purchasing power of{" "}
@@ -44,7 +44,7 @@ export default function Home() {
             </p>
             {medianMultiplier && (
               <p className="text-base text-muted-foreground mt-4 font-light">
-                At the median — excluding all outliers — that gap is still{" "}
+                At the median — excluding all outliers — that gap is{" "}
                 <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
               </p>
             )}
@@ -59,6 +59,14 @@ export default function Home() {
           </div>
         )}
 
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Stat label="Profiles" value={totalUsers.toLocaleString()} />
+          <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
+          <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
+          <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
+        </div>
+
         {/* Chart */}
         {low && high && (
           <div className="rounded-lg border border-border/50 p-6">
@@ -68,14 +76,6 @@ export default function Home() {
             <HoldingsChart brackets={[low, high]} />
           </div>
         )}
-
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Stat label="Profiles" value={totalUsers.toLocaleString()} />
-          <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-          <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
-          <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
-        </div>
 
         {/* Footer */}
         <p className="font-mono text-[10px] tracking-wide text-muted-foreground text-center pt-4">
@@ -118,23 +118,10 @@ function BracketCard({
       </div>
 
       <div className="space-y-3">
-        <Row
-          label="Users"
-          value={bracket.userCount.toLocaleString()}
-          muted={highlight}
-        />
+        <Row label="Users" value={bracket.userCount.toLocaleString()} muted={highlight} />
         <div className={`border-t ${highlight ? "border-background/10" : "border-border/50"}`} />
-        <Row
-          label="Avg (trimmed)"
-          value={`$${formatUSD(bracket.trimmedAvgHoldings)}`}
-          muted={highlight}
-          large
-        />
-        <Row
-          label="Median"
-          value={`$${formatUSD(bracket.medianHoldings)}`}
-          muted={highlight}
-        />
+        <Row label="Avg" value={`$${formatUSD(bracket.trimmedAvgHoldings)}`} muted={highlight} large />
+        <Row label="Median" value={`$${formatUSD(bracket.medianHoldings)}`} muted={highlight} />
       </div>
     </div>
   );
