@@ -3,6 +3,14 @@
 "use client";
 
 import { useRef, useEffect, forwardRef } from "react";
+
+// Suppress THREE.Clock deprecation warning from @react-three/fiber internals
+const origWarn = console.warn;
+console.warn = (...args: unknown[]) => {
+  if (typeof args[0] === "string" && args[0].includes("THREE.Clock")) return;
+  origWarn(...args);
+};
+
 import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import { EffectComposer, wrapEffect } from "@react-three/postprocessing";
 import { Effect } from "postprocessing";
