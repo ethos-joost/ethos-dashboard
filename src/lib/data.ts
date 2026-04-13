@@ -25,6 +25,7 @@ export interface DashboardData {
   profilesWithHoldings: number;
   lastIngestedAt: string | null;
   multiplier: number | null;
+  medianMultiplier: number | null;
 }
 
 const BRACKETS = [
@@ -82,6 +83,11 @@ export function getDashboardData(): DashboardData {
     multiplier = Math.round((high.trimmedAvgHoldings / low.trimmedAvgHoldings) * 10) / 10;
   }
 
+  let medianMultiplier: number | null = null;
+  if (high && low && low.medianHoldings > 0 && high.medianHoldings > 0) {
+    medianMultiplier = Math.round((high.medianHoldings / low.medianHoldings) * 10) / 10;
+  }
+
   const profilesWithHoldings = profiles.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
 
   return {
@@ -91,5 +97,6 @@ export function getDashboardData(): DashboardData {
     profilesWithHoldings,
     lastIngestedAt: profilesData.lastIngestedAt,
     multiplier,
+    medianMultiplier,
   };
 }

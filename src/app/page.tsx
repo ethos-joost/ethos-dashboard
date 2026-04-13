@@ -11,7 +11,7 @@ function formatUSD(value: number): string {
 
 export default function Home() {
   const data = getDashboardData();
-  const { brackets, totalUsers, multiplier, profilesWithHoldings, lastIngestedAt } = data;
+  const { brackets, totalUsers, multiplier, medianMultiplier, profilesWithHoldings, lastIngestedAt } = data;
 
   const low = brackets.find((b) => b.label === "1200\u20131300");
   const high = brackets.find((b) => b.label === "1600+");
@@ -42,6 +42,12 @@ export default function Home() {
               the purchasing power of{" "}
               <span className="font-semibold">1200–1300</span> users
             </p>
+            {medianMultiplier && (
+              <p className="text-base text-muted-foreground mt-4 font-light">
+                At the median — excluding all outliers — that gap is still{" "}
+                <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
+              </p>
+            )}
           </div>
         )}
 
@@ -100,7 +106,7 @@ function BracketCard({
         rounded-lg border p-5
         ${highlight
           ? "bg-foreground text-background border-foreground"
-          : "border-border/50 text-foreground"
+          : "bg-muted/50 border-border text-foreground"
         }
       `}
     >
@@ -127,11 +133,6 @@ function BracketCard({
         <Row
           label="Median"
           value={`$${formatUSD(bracket.medianHoldings)}`}
-          muted={highlight}
-        />
-        <Row
-          label="Total"
-          value={`$${formatUSD(bracket.totalHoldings)}`}
           muted={highlight}
         />
       </div>
