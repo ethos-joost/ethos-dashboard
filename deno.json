@@ -1,0 +1,28 @@
+{
+  "lock": false,
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "start": "deno run -A --watch=static/,routes/ dev.ts",
+    "build": "deno run -A dev.ts build",
+    "preview": "deno run -A main.ts",
+    "ingest": "deno run -A scripts/ingest.ts"
+  },
+  "imports": {
+    "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "preact": "https://esm.sh/preact@10.22.0",
+    "preact/": "https://esm.sh/preact@10.22.0/",
+    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.4.2",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.2.3",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.6.1",
+    "chart.js": "https://esm.sh/chart.js@4.4.4",
+    "chart.js/": "https://esm.sh/chart.js@4.4.4/",
+    "@std/dotenv": "jsr:@std/dotenv@0.225.3",
+    "postgres": "https://deno.land/x/postgres@v0.19.3/mod.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "nodeModulesDir": "none",
+  "unstable": ["kv"]
+}
