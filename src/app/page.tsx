@@ -53,7 +53,7 @@ export default function Home() {
             </p>
             {medianMultiplier && (
               <p className="text-sm md:text-base text-muted-foreground mt-3 md:mt-4 font-light wrap-break-word">
-                At the median — excluding all outliers — that gap is{" "}
+                At the median — that gap is{" "}
                 <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
               </p>
             )}
