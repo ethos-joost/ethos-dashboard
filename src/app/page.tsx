@@ -24,35 +24,35 @@ export default function Home() {
   const high = brackets.find((b) => b.label === "1600+");
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
+    <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-10">
       {/* Header */}
-      <Panel className="mb-6">
+      <Panel className="mb-4 md:mb-6">
         <header className="flex items-center gap-3">
-          <Image src="/ethos-logo.svg" alt="Ethos" width={100} height={25} className="shrink-0" />
+          <Image src="/ethos-logo.svg" alt="Ethos" width={100} height={25} className="shrink-0 w-[72px] h-auto md:w-[100px]" />
           <div className="w-px h-5 bg-border shrink-0" />
-          <span className="text-sm font-mono tracking-widest uppercase text-muted-foreground leading-none">
+          <span className="text-[10px] md:text-sm font-mono tracking-widest uppercase text-muted-foreground leading-none">
             Score vs Holdings
           </span>
         </header>
       </Panel>
 
       {/* Headline + Stats: 2-col on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
         {/* Headline takes 2/3 */}
         {multiplier && (
           <Panel className="lg:col-span-2">
-            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4">
+            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
               Key Insight
             </p>
-            <p className="text-2xl md:text-3xl font-light leading-snug text-foreground">
+            <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
               On average users with score{" "}
               <span className="font-semibold">1600+</span> have{" "}
-              <span className="font-mono font-bold text-3xl md:text-4xl">{multiplier}x</span>{" "}
+              <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">{multiplier}x</span>{" "}
               the purchasing power of{" "}
               <span className="font-semibold">1200–1300</span> users
             </p>
             {medianMultiplier && (
-              <p className="text-base text-muted-foreground mt-4 font-light">
+              <p className="text-sm md:text-base text-muted-foreground mt-3 md:mt-4 font-light wrap-break-word">
                 At the median — excluding all outliers — that gap is{" "}
                 <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
               </p>
@@ -62,10 +62,10 @@ export default function Home() {
 
         {/* Stats takes 1/3 */}
         <Panel className="lg:col-span-1">
-          <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-5">
+          <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4 md:mb-5">
             Coverage
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             <Stat label="Profiles" value={totalUsers.toLocaleString()} />
             <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
             <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
@@ -76,14 +76,14 @@ export default function Home() {
 
       {/* Bracket cards: side-by-side */}
       {low && high && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
           <BracketCard bracket={low} label="1200–1300" />
           <BracketCard bracket={high} label="1600+" highlight />
         </div>
       )}
 
       {/* Holdings Comparison + Distribution: side by side on xl */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
         {low && high && (
           <Panel>
             <SectionHeader title="Holdings Comparison" />
@@ -124,15 +124,15 @@ export default function Home() {
           : null;
 
         return (
-          <Panel className="mb-6">
+          <Panel className="mb-4 md:mb-6">
             <SectionHeader title="Percentile Breakdown" />
-            <div className="overflow-x-auto">
-              <table className="w-full font-mono text-sm">
+            <div className="overflow-x-auto w-full max-w-full">
+              <table className="w-full font-mono text-xs md:text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="text-left text-xs text-muted-foreground font-medium py-2 pr-4">Percentile</th>
+                    <th className="text-left text-[10px] md:text-xs text-muted-foreground font-medium py-2 pr-2 md:pr-4">Percentile</th>
                     {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
-                      <th key={p} className="text-right text-xs text-muted-foreground font-medium py-2 px-3">
+                      <th key={p} className="text-right text-[10px] md:text-xs text-muted-foreground font-medium py-2 px-2 md:px-3">
                         {p.toUpperCase()}
                       </th>
                     ))}
@@ -141,22 +141,22 @@ export default function Home() {
                 <tbody>
                   {[low, high].map((b) => (
                     <tr key={b.label} className="border-b border-border/30">
-                      <td className="py-3 pr-4 font-semibold">{b.label}</td>
+                      <td className="py-3 pr-2 md:pr-4 font-semibold">{b.label}</td>
                       {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
-                        <td key={p} className="text-right py-3 px-3 tabular-nums">
+                        <td key={p} className="text-right py-3 px-2 md:px-3 tabular-nums">
                           {formatUSDExact(b.percentiles[p])}
                         </td>
                       ))}
                     </tr>
                   ))}
                   <tr className="text-muted-foreground">
-                    <td className="py-3 pr-4 text-xs">Multiplier</td>
+                    <td className="py-3 pr-2 md:pr-4 text-[10px] md:text-xs">Multiplier</td>
                     {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => {
                       const ratio = low.percentiles[p] > 0
                         ? Math.round((high.percentiles[p] / low.percentiles[p]) * 10) / 10
                         : null;
                       return (
-                        <td key={p} className="text-right py-3 px-3 tabular-nums text-xs">
+                        <td key={p} className="text-right py-3 px-2 md:px-3 tabular-nums text-[10px] md:text-xs">
                           {ratio ? `${ratio}x` : "—"}
                         </td>
                       );
@@ -179,9 +179,9 @@ export default function Home() {
         const lowOver100 = low.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
 
         return (
-          <Panel className="mb-6">
+          <Panel className="mb-4 md:mb-6">
             <SectionHeader title="Holdings Tiers" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {[
                 { bracket: low, label: "1200–1300" },
                 { bracket: high, label: "1600+" },
@@ -190,8 +190,8 @@ export default function Home() {
                   <p className="font-mono text-sm font-semibold mb-3">{label}</p>
                   <div className="space-y-2">
                     {bracket.tiers.map((tier) => (
-                      <div key={tier.label} className="flex items-center gap-3">
-                        <span className="font-mono text-xs text-muted-foreground w-16 shrink-0">
+                      <div key={tier.label} className="flex items-center gap-2 md:gap-3">
+                        <span className="font-mono text-[10px] md:text-xs text-muted-foreground w-14 md:w-16 shrink-0">
                           {tier.label}
                         </span>
                         <div className="flex-1 h-5 bg-muted/50 rounded-sm overflow-hidden">
@@ -200,7 +200,7 @@ export default function Home() {
                             style={{ width: `${Math.max(tier.pct, 0.5)}%` }}
                           />
                         </div>
-                        <span className="font-mono text-xs tabular-nums w-12 text-right">
+                        <span className="font-mono text-[10px] md:text-xs tabular-nums w-10 md:w-12 text-right shrink-0">
                           {tier.pct}%
                         </span>
                       </div>
@@ -231,7 +231,7 @@ export default function Home() {
 
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white/95 backdrop-blur-md rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)] p-6 md:p-7 ${className}`}>
+    <div className={`bg-white/95 backdrop-blur-md rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)] p-4 sm:p-5 md:p-7 min-w-0 overflow-hidden ${className}`}>
       {children}
     </div>
   );
@@ -262,7 +262,7 @@ function BracketCard({
   return (
     <div
       className={`
-        rounded-xl p-6 md:p-7 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)]
+        rounded-xl p-4 sm:p-5 md:p-7 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)] min-w-0 overflow-hidden
         ${highlight
           ? "bg-foreground text-background"
           : "bg-white/95 backdrop-blur-md text-foreground"
@@ -298,11 +298,11 @@ function Row({
   large?: boolean;
 }) {
   return (
-    <div className="flex justify-between items-baseline">
-      <span className={`font-mono text-xs ${muted ? "text-background/40" : "text-muted-foreground"}`}>
+    <div className="flex justify-between items-baseline gap-2 min-w-0">
+      <span className={`font-mono text-xs truncate ${muted ? "text-background/40" : "text-muted-foreground"}`}>
         {label}
       </span>
-      <span className={`font-mono ${large ? "text-lg font-semibold" : "text-sm"}`}>
+      <span className={`font-mono shrink-0 ${large ? "text-lg font-semibold" : "text-sm"}`}>
         {value}
       </span>
     </div>

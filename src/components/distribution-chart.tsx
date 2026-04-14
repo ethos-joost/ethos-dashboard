@@ -24,23 +24,24 @@ export function DistributionChart({ brackets }: { brackets: BracketData[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} barGap={2} barSize={20}>
+      <BarChart data={data} barGap={2} barSize={16} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 89.8%)" vertical={false} />
         <XAxis
           dataKey="bin"
-          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
+          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 9, fontFamily: "var(--font-geist-mono)" }}
           axisLine={false}
           tickLine={false}
-          angle={-35}
+          angle={-45}
           textAnchor="end"
-          height={50}
+          height={60}
+          interval={0}
         />
         <YAxis
           tickFormatter={(v) => `${v}%`}
-          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 11, fontFamily: "var(--font-geist-mono)" }}
+          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
           axisLine={false}
           tickLine={false}
-          width={45}
+          width={40}
         />
         <Tooltip
           shared={false}

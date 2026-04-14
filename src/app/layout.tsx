@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { IBM_Plex_Mono } from "next/font/google";
 import { DitherBackground } from "@/components/dither-bg";
@@ -23,6 +23,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Ethos Score vs Holdings",
   description: "Analyzing the correlation between Ethos credibility scores and on-chain purchasing power",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

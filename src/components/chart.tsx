@@ -26,7 +26,7 @@ export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={data} barGap={12} barSize={48}>
+      <BarChart data={data} barGap={8} barSize={40} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
         <CartesianGrid
           strokeDasharray="3 3"
           stroke="hsl(0 0% 89.8%)"
@@ -40,10 +40,10 @@ export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
         />
         <YAxis
           tickFormatter={formatUSD}
-          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 11, fontFamily: "var(--font-geist-mono)" }}
+          tick={{ fill: "hsl(0 0% 45.1%)", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
           axisLine={false}
           tickLine={false}
-          width={60}
+          width={50}
         />
         <Tooltip
           shared={false}
