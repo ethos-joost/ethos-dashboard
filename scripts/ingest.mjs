@@ -226,11 +226,15 @@ async function batchGetHoldings(addresses, ethBalances) {
   const results = new Map();
   const queue = [...addresses];
 
+  let done = 0;
+  const total = queue.length;
   async function worker() {
     while (queue.length > 0) {
       const address = queue.shift();
       const usd = await getWalletHoldings(address, ethBalances);
       results.set(address, usd);
+      done++;
+      if (done % 20 === 0) process.stdout.write(`  ${done}/${total} addresses\r`);
     }
   }
 
@@ -251,7 +255,10 @@ async function rpc(url, method, params) {
 async function fetchRetry(url, opts, retries = 3) {
   for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(url, opts);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(url, { ...opts, signal: controller.signal });
+      clearTimeout(timeout);
       if (res.ok || i === retries) return res;
       if (res.status === 429 || res.status >= 500) {
         await delay(1000 * (i + 1) * (res.status === 429 ? 2 : 1));
@@ -259,7 +266,10 @@ async function fetchRetry(url, opts, retries = 3) {
       }
       return res;
     } catch (err) {
-      if (i === retries) throw err;
+      if (i === retries) {
+        console.error(`  fetch failed after ${retries} retries:`, err.message);
+        return new Response("{}", { status: 500 });
+      }
       await delay(1000 * (i + 1));
     }
   }
