@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@ibm/plex": "^6.4.1",
-    "@react-three/fiber": "^9.5.0",
+    "@react-three/fiber": "9.5.0",
     "@react-three/postprocessing": "^3.0.4",
     "dotenv": "^17.4.2",
     "geist": "^1.7.0",
@@ -21,8 +21,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
-    "three": "^0.183.2",
-    "zero-ui": "github:nodexbt/zero-ui"
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

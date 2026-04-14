@@ -24,28 +24,30 @@ export default function Home() {
   const high = brackets.find((b) => b.label === "1600+");
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-4 md:p-8 lg:p-12">
-    <div className="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_32px_rgba(0,0,0,0.06)] px-8 py-10 md:px-12 md:py-12">
+    <div className="min-h-screen max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10">
       {/* Header */}
-      <header className="mb-12 flex items-center gap-3">
-        <Image src="/ethos-logo.svg" alt="Ethos" width={100} height={25} className="shrink-0" />
-        <div className="w-px h-5 bg-border shrink-0" />
-        <span className="text-sm font-mono tracking-widest uppercase text-muted-foreground leading-none">
-          Score vs Holdings
-        </span>
-      </header>
+      <Panel className="mb-6">
+        <header className="flex items-center gap-3">
+          <Image src="/ethos-logo.svg" alt="Ethos" width={100} height={25} className="shrink-0" />
+          <div className="w-px h-5 bg-border shrink-0" />
+          <span className="text-sm font-mono tracking-widest uppercase text-muted-foreground leading-none">
+            Score vs Holdings
+          </span>
+        </header>
+      </Panel>
 
-      <div className="space-y-10">
-        {/* Headline */}
+      {/* Headline + Stats: 2-col on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Headline takes 2/3 */}
         {multiplier && (
-          <div className="py-8">
+          <Panel className="lg:col-span-2">
             <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4">
               Key Insight
             </p>
-            <p className="text-3xl font-light leading-snug text-foreground">
+            <p className="text-2xl md:text-3xl font-light leading-snug text-foreground">
               On average users with score{" "}
               <span className="font-semibold">1600+</span> have{" "}
-              <span className="font-mono font-bold text-4xl">{multiplier}x</span>{" "}
+              <span className="font-mono font-bold text-3xl md:text-4xl">{multiplier}x</span>{" "}
               the purchasing power of{" "}
               <span className="font-semibold">1200–1300</span> users
             </p>
@@ -55,40 +57,44 @@ export default function Home() {
                 <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
               </p>
             )}
-          </div>
+          </Panel>
         )}
 
-        {/* Comparison cards */}
-        {low && high && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <BracketCard bracket={low} label="1200–1300" />
-            <BracketCard bracket={high} label="1600+" highlight />
+        {/* Stats takes 1/3 */}
+        <Panel className="lg:col-span-1">
+          <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-5">
+            Coverage
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Stat label="Profiles" value={totalUsers.toLocaleString()} />
+            <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
+            <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
+            <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
           </div>
-        )}
+        </Panel>
+      </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Stat label="Profiles" value={totalUsers.toLocaleString()} />
-          <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-          <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
-          <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
+      {/* Bracket cards: side-by-side */}
+      {low && high && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <BracketCard bracket={low} label="1200–1300" />
+          <BracketCard bracket={high} label="1600+" highlight />
         </div>
+      )}
 
-        {/* Avg/Median chart */}
+      {/* Holdings Comparison + Distribution: side by side on xl */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
         {low && high && (
-          <div className="rounded-lg border border-border/50 p-6">
-            <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
-              Holdings Comparison
-            </h2>
+          <Panel>
+            <SectionHeader title="Holdings Comparison" />
             <HoldingsChart brackets={[low, high]} />
             <Takeaway>
               The average 1600+ user holds ${formatUSD(high.trimmedAvgHoldings)} compared to ${formatUSD(low.trimmedAvgHoldings)} for 1200–1300 users.
               Even at the median the gap holds: ${formatUSD(high.medianHoldings)} vs ${formatUSD(low.medianHoldings)}.
             </Takeaway>
-          </div>
+          </Panel>
         )}
 
-        {/* Distribution chart */}
         {low && high && (() => {
           const lowUnder10 = low.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
           const highUnder10 = high.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
@@ -96,33 +102,30 @@ export default function Home() {
           const lowOver1K = low.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
 
           return (
-            <div className="rounded-lg border border-border/50 p-6">
-              <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-1">
-                Holdings Distribution
-              </h2>
-              <p className="text-xs text-muted-foreground mb-6">
-                Percentage of users in each holdings range
-              </p>
+            <Panel>
+              <SectionHeader
+                title="Holdings Distribution"
+                description="Percentage of users in each holdings range"
+              />
               <DistributionChart brackets={[low, high]} />
               <Takeaway>
                 {lowUnder10.toFixed(1)}% of 1200–1300 users hold under $10, compared to {highUnder10.toFixed(1)}% of 1600+ users.
                 {" "}{highOver1K.toFixed(1)}% of 1600+ users hold over $1K vs just {lowOver1K.toFixed(1)}% of 1200–1300 users.
               </Takeaway>
-            </div>
+            </Panel>
           );
         })()}
+      </div>
 
-        {/* Percentile table */}
-        {low && high && (() => {
-          const p75Ratio = low.percentiles.p75 > 0
-            ? Math.round((high.percentiles.p75 / low.percentiles.p75) * 10) / 10
-            : null;
+      {/* Percentile Breakdown (full width) */}
+      {low && high && (() => {
+        const p75Ratio = low.percentiles.p75 > 0
+          ? Math.round((high.percentiles.p75 / low.percentiles.p75) * 10) / 10
+          : null;
 
-          return (
-            <div className="rounded-lg border border-border/50 p-6">
-              <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
-                Percentile Breakdown
-              </h2>
+        return (
+          <Panel className="mb-6">
+            <SectionHeader title="Percentile Breakdown" />
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-sm">
                 <thead>
@@ -166,21 +169,19 @@ export default function Home() {
               At the 75th percentile, 1600+ users hold {formatUSDExact(high.percentiles.p75)} vs {formatUSDExact(low.percentiles.p75)} for 1200–1300{p75Ratio ? ` — a ${p75Ratio}x gap` : ""}.
               The difference widens at every level, confirming this isn&apos;t driven by a few outliers.
             </Takeaway>
-          </div>
-          );
-        })()}
+          </Panel>
+        );
+      })()}
 
-        {/* Holdings tiers */}
-        {low && high && (() => {
-          const highOver100 = high.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
-          const lowOver100 = low.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+      {/* Holdings Tiers (full width) */}
+      {low && high && (() => {
+        const highOver100 = high.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+        const lowOver100 = low.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
 
-          return (
-          <div className="rounded-lg border border-border/50 p-6">
-            <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-6">
-              Holdings Tiers
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        return (
+          <Panel className="mb-6">
+            <SectionHeader title="Holdings Tiers" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 { bracket: low, label: "1200–1300" },
                 { bracket: high, label: "1600+" },
@@ -212,20 +213,39 @@ export default function Home() {
               {highOver100.toFixed(1)}% of 1600+ users hold over $100, compared to {lowOver100.toFixed(1)}% of 1200–1300 users.
               High-credibility users are far more likely to have meaningful on-chain assets.
             </Takeaway>
-          </div>
-          );
-        })()}
+          </Panel>
+        );
+      })()}
 
-        {/* Footer */}
-        <p className="font-mono text-[10px] tracking-wide text-muted-foreground text-center pt-4">
-          {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-          {" "}&middot;{" "}Ethereum + Base{" "}&middot;{" "}Trimmed mean (5%)
-          {lastIngestedAt && (
-            <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
-          )}
-        </p>
-      </div>
+      {/* Footer */}
+      <p className="font-mono text-[10px] tracking-wide text-muted-foreground text-center">
+        {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+        {" "}&middot;{" "}Ethereum + Base{" "}&middot;{" "}Trimmed mean (5%)
+        {lastIngestedAt && (
+          <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
+        )}
+      </p>
     </div>
+  );
+}
+
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-white/95 backdrop-blur-md rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)] p-6 md:p-7 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-6">
+      <h2 className="font-mono text-xs tracking-widest uppercase text-muted-foreground">
+        {title}
+      </h2>
+      {description && (
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      )}
     </div>
   );
 }
@@ -242,10 +262,10 @@ function BracketCard({
   return (
     <div
       className={`
-        rounded-lg border p-5
+        rounded-xl p-6 md:p-7 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_2px_16px_rgba(0,0,0,0.04)]
         ${highlight
-          ? "bg-foreground text-background border-foreground"
-          : "bg-muted/50 border-border text-foreground"
+          ? "bg-foreground text-background"
+          : "bg-white/95 backdrop-blur-md text-foreground"
         }
       `}
     >
@@ -291,9 +311,9 @@ function Row({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="text-center">
-      <p className="font-mono text-lg font-semibold text-foreground">{value}</p>
-      <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground">
+    <div>
+      <p className="font-mono text-xl font-semibold text-foreground">{value}</p>
+      <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground mt-0.5">
         {label}
       </p>
     </div>

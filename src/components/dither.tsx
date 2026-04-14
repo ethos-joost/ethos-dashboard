@@ -167,12 +167,14 @@ class RetroEffectImpl extends Effect {
   }
 }
 
+// Hoist wrapEffect so it only runs once, not every render
+const WrappedRetroEffect = wrapEffect(RetroEffectImpl);
+
 const RetroEffect = forwardRef<
   RetroEffectImpl,
   { colorNum: number; pixelSize: number }
 >((props, ref) => {
   const { colorNum, pixelSize } = props;
-  const WrappedRetroEffect = wrapEffect(RetroEffectImpl);
   return (
     <WrappedRetroEffect ref={ref} colorNum={colorNum} pixelSize={pixelSize} />
   );
@@ -243,11 +245,12 @@ function DitheredWaves({
   }, [size, gl]);
 
   const prevColor = useRef([...waveColor]);
-  useFrame(({ clock }) => {
+  const startTime = useRef(performance.now());
+  useFrame(() => {
     const u = waveUniformsRef.current;
 
     if (!disableAnimation) {
-      u.time.value = clock.getElapsedTime();
+      u.time.value = (performance.now() - startTime.current) / 1000;
     }
 
     if (u.waveSpeed.value !== waveSpeed) u.waveSpeed.value = waveSpeed;
@@ -335,6 +338,7 @@ export default function Dither({
       className="w-full h-full"
       camera={{ position: [0, 0, 6] }}
       dpr={1}
+      frameloop="always"
       gl={{ antialias: true, preserveDrawingBuffer: true }}
     >
       <DitheredWaves
