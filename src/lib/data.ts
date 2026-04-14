@@ -168,11 +168,15 @@ export function getDashboardData(): DashboardData {
     medianMultiplier = Math.round((high.medianHoldings / low.medianHoldings) * 10) / 10;
   }
 
-  const profilesWithHoldings = allProfiles.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
+  // Only count profiles in displayed brackets so totals add up
+  const inBrackets = allProfiles.filter((p) =>
+    BRACKETS.some((b) => p.score >= b.min && p.score < b.max)
+  );
+  const profilesWithHoldings = inBrackets.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
 
   return {
     brackets,
-    totalUsers: allProfiles.length,
+    totalUsers: inBrackets.length,
     fetchedAt: profilesData.exportedAt,
     profilesWithHoldings,
     lastIngestedAt: profilesData.lastIngestedAt,
