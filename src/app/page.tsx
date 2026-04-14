@@ -45,11 +45,11 @@ export default function Home() {
               Key Insight
             </p>
             <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
-              On average users with score{" "}
-              <span className="font-semibold">1600+</span> have{" "}
+              On average users with a score{" "}
+              <span className="font-semibold">higher than 1600</span> have{" "}
               <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">{multiplier}x</span>{" "}
-              the purchasing power of{" "}
-              <span className="font-semibold">1200–1300</span> users
+              the purchasing power of users with a score{" "}
+              <span className="font-semibold">between 1200–1300</span>
             </p>
             {medianMultiplier && (
               <p className="text-sm md:text-base text-muted-foreground mt-3 md:mt-4 font-light wrap-break-word">
