@@ -137,9 +137,12 @@ async function main() {
           hevmTotal += hevm;
         }
 
+        // Subtract previous HL + HEVM values first (idempotent rerun)
+        const prevHl = profile.holdingsHyperliquid ?? 0;
+        const prevHevm = profile.holdingsHyperEvm ?? 0;
+        profile.holdingsUSD = Math.round((profile.holdingsUSD - prevHl - prevHevm + hlTotal + hevmTotal) * 100) / 100;
         profile.holdingsHyperliquid = Math.round(hlTotal * 100) / 100;
         profile.holdingsHyperEvm = Math.round(hevmTotal * 100) / 100;
-        profile.holdingsUSD = Math.round((profile.holdingsUSD + hlTotal + hevmTotal) * 100) / 100;
 
         if (hlTotal > 0) totalHlFound++;
         if (hevmTotal > 0) totalHevmFound++;

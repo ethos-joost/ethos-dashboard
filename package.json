@@ -9,7 +9,8 @@
     "lint": "eslint",
     "ingest": "node scripts/ingest.mjs",
     "enrich": "node scripts/enrich.mjs",
-    "enrich:hyperliquid": "node scripts/enrich-hyperliquid.mjs"
+    "enrich:hyperliquid": "node scripts/enrich-hyperliquid.mjs",
+    "filter:privy": "node scripts/filter-privy-wallets.mjs"
   },
   "dependencies": {
     "@ibm/plex": "^6.4.1",
