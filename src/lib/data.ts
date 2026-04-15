@@ -99,11 +99,11 @@ export function getDashboardData(): DashboardData {
       (b) => profile.score >= b.min && profile.score < b.max
     );
     if (!bracket) continue;
-    bracketProfiles.get(bracket.label)!.push(profile);
     const val = profile.holdingsUSD;
-    if (!isNaN(val) && isFinite(val)) {
-      bracketValues.get(bracket.label)!.push(val);
-    }
+    // Only count profiles with actual on-chain holdings > $0 — excludes dormant/signer-only wallets
+    if (isNaN(val) || !isFinite(val) || val <= 0) continue;
+    bracketProfiles.get(bracket.label)!.push(profile);
+    bracketValues.get(bracket.label)!.push(val);
   }
 
   const brackets: BracketData[] = BRACKETS.map((bracket) => {
