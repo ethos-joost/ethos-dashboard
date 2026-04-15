@@ -7,6 +7,18 @@ export interface StoredProfile {
   addresses: string[];
   holdingsUSD: number;
   updatedAt: string;
+  // Enrichment from Ethos Postgres (optional for backwards compat)
+  vouchGivenEth?: number;
+  vouchGivenCount?: number;
+  vouchReceivedEth?: number;
+  vouchReceivedCount?: number;
+  reviewsPositive?: number;
+  reviewsNeutral?: number;
+  reviewsNegative?: number;
+  humanVerified?: boolean;
+  xpTotal?: number;
+  influenceFactor?: number;
+  influenceFactorPercentile?: number;
 }
 
 export interface BracketData {
@@ -20,6 +32,13 @@ export interface BracketData {
   tiers: { label: string; count: number; pct: number }[];
   topHolders: { displayName: string; holdingsUSD: number }[];
   distribution: { bin: string; count: number }[];
+  // Engagement metrics from Ethos DB
+  humanVerifiedCount: number;
+  humanVerifiedPct: number;
+  vouchGivenEthTotal: number;
+  vouchReceivedEthTotal: number;
+  avgReviewsReceived: number;
+  avgXp: number;
 }
 
 export interface DashboardData {
@@ -93,6 +112,16 @@ export function getDashboardData(): DashboardData {
     const avg = values.length > 0 ? total / values.length : 0;
     const median = values.length > 0 ? sorted[Math.floor(sorted.length / 2)] : 0;
 
+    // Total for "Market Power" — only trim top 1% if the bracket has
+    // obvious spam wallets (over $10M). Keeps legit whales intact.
+    const SPAM_THRESHOLD = 10_000_000;
+    const hasSpam = sorted.length > 0 && sorted[sorted.length - 1] > SPAM_THRESHOLD;
+    let cappedTotal = total;
+    if (hasSpam && sorted.length >= 100) {
+      const trimTop = Math.ceil(sorted.length * 0.01);
+      cappedTotal = sorted.slice(0, sorted.length - trimTop).reduce((s, v) => s + v, 0);
+    }
+
     // Trimmed mean
     let trimmedAvg = avg;
     let trimmedTotal = total;
@@ -142,17 +171,39 @@ export function getDashboardData(): DashboardData {
         holdingsUSD: Math.round(p.holdingsUSD * 100) / 100,
       }));
 
+    // Engagement metrics
+    const humanVerifiedCount = profiles.filter((p) => p.humanVerified).length;
+    const humanVerifiedPct = profiles.length > 0
+      ? Math.round((humanVerifiedCount / profiles.length) * 1000) / 10
+      : 0;
+    const vouchGivenEthTotal = profiles.reduce((s, p) => s + (p.vouchGivenEth ?? 0), 0);
+    const vouchReceivedEthTotal = profiles.reduce((s, p) => s + (p.vouchReceivedEth ?? 0), 0);
+    const totalReviews = profiles.reduce(
+      (s, p) => s + (p.reviewsPositive ?? 0) + (p.reviewsNeutral ?? 0) + (p.reviewsNegative ?? 0),
+      0,
+    );
+    const avgReviewsReceived = profiles.length > 0 ? totalReviews / profiles.length : 0;
+    const avgXp = profiles.length > 0
+      ? profiles.reduce((s, p) => s + (p.xpTotal ?? 0), 0) / profiles.length
+      : 0;
+
     return {
       label: bracket.label,
       userCount: values.length,
       avgHoldings: Math.round(avg * 100) / 100,
       trimmedAvgHoldings: Math.round(trimmedAvg * 100) / 100,
       medianHoldings: Math.round(median * 100) / 100,
-      totalHoldings: Math.round(trimmedTotal * 100) / 100,
+      totalHoldings: Math.round(cappedTotal * 100) / 100,
       percentiles,
       tiers,
       topHolders,
       distribution,
+      humanVerifiedCount,
+      humanVerifiedPct,
+      vouchGivenEthTotal: Math.round(vouchGivenEthTotal * 100) / 100,
+      vouchReceivedEthTotal: Math.round(vouchReceivedEthTotal * 100) / 100,
+      avgReviewsReceived: Math.round(avgReviewsReceived * 10) / 10,
+      avgXp: Math.round(avgXp),
     };
   });
 

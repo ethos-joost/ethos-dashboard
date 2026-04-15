@@ -1,19 +1,12 @@
 import Image from "next/image";
 import { getDashboardData, type BracketData } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
-import { DistributionChart } from "@/components/distribution-chart";
 
 function formatUSD(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return value.toFixed(0);
-}
-
-function formatUSDExact(value: number): string {
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
-  if (value >= 1) return `$${value.toFixed(0)}`;
-  return `$${value.toFixed(2)}`;
 }
 
 export default function Home() {
@@ -82,92 +75,53 @@ export default function Home() {
         </div>
       )}
 
-      {/* Holdings Comparison + Distribution: side by side on xl */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-        {low && high && (
-          <Panel>
-            <SectionHeader title="Holdings Comparison" />
-            <HoldingsChart brackets={[low, high]} />
-            <Takeaway>
-              The average 1600+ user holds ${formatUSD(high.trimmedAvgHoldings)} compared to ${formatUSD(low.trimmedAvgHoldings)} for 1200–1300 users.
-              Even at the median the gap holds: ${formatUSD(high.medianHoldings)} vs ${formatUSD(low.medianHoldings)}.
-            </Takeaway>
-          </Panel>
-        )}
+      {/* Holdings Comparison (full width) */}
+      {low && high && (
+        <Panel className="mb-4 md:mb-6">
+          <SectionHeader title="Holdings Comparison" />
+          <HoldingsChart brackets={[low, high]} />
+          <Takeaway>
+            The average 1600+ user holds ${formatUSD(high.trimmedAvgHoldings)} compared to ${formatUSD(low.trimmedAvgHoldings)} for 1200–1300 users.
+            Even at the median the gap holds: ${formatUSD(high.medianHoldings)} vs ${formatUSD(low.medianHoldings)}.
+          </Takeaway>
+        </Panel>
+      )}
 
-        {low && high && (() => {
-          const lowUnder10 = low.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
-          const highUnder10 = high.tiers.find((t) => t.label === "$0–10")?.pct ?? 0;
-          const highOver1K = high.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
-          const lowOver1K = low.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
-
-          return (
-            <Panel>
-              <SectionHeader
-                title="Holdings Distribution"
-                description="Percentage of users in each holdings range"
-              />
-              <DistributionChart brackets={[low, high]} />
-              <Takeaway>
-                {lowUnder10.toFixed(1)}% of 1200–1300 users hold under $10, compared to {highUnder10.toFixed(1)}% of 1600+ users.
-                {" "}{highOver1K.toFixed(1)}% of 1600+ users hold over $1K vs just {lowOver1K.toFixed(1)}% of 1200–1300 users.
-              </Takeaway>
-            </Panel>
-          );
-        })()}
-      </div>
-
-      {/* Percentile Breakdown (full width) */}
+      {/* Market Power */}
       {low && high && (() => {
-        const p75Ratio = low.percentiles.p75 > 0
-          ? Math.round((high.percentiles.p75 / low.percentiles.p75) * 10) / 10
-          : null;
+        const highOver10K = high.tiers.find((t) => t.label === "$10K+")?.count ?? 0;
+        const highOver1K = high.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const lowOver10K = low.tiers.find((t) => t.label === "$10K+")?.count ?? 0;
+        const lowOver1K = low.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.count, 0);
 
         return (
           <Panel className="mb-4 md:mb-6">
-            <SectionHeader title="Percentile Breakdown" />
-            <div className="overflow-x-auto w-full max-w-full">
-              <table className="w-full font-mono text-xs md:text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left text-[10px] md:text-xs text-muted-foreground font-medium py-2 pr-2 md:pr-4">Percentile</th>
-                    {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
-                      <th key={p} className="text-right text-[10px] md:text-xs text-muted-foreground font-medium py-2 px-2 md:px-3">
-                        {p.toUpperCase()}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[low, high].map((b) => (
-                    <tr key={b.label} className="border-b border-border/30">
-                      <td className="py-3 pr-2 md:pr-4 font-semibold">{b.label}</td>
-                      {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => (
-                        <td key={p} className="text-right py-3 px-2 md:px-3 tabular-nums">
-                          {formatUSDExact(b.percentiles[p])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                  <tr className="text-muted-foreground">
-                    <td className="py-3 pr-2 md:pr-4 text-[10px] md:text-xs">Multiplier</td>
-                    {(["p10", "p25", "p50", "p75", "p90"] as const).map((p) => {
-                      const ratio = low.percentiles[p] > 0
-                        ? Math.round((high.percentiles[p] / low.percentiles[p]) * 10) / 10
-                        : null;
-                      return (
-                        <td key={p} className="text-right py-3 px-2 md:px-3 tabular-nums text-[10px] md:text-xs">
-                          {ratio ? `${ratio}x` : "—"}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </table>
+            <SectionHeader title="Market Power" description="Combined holdings and high-value user counts per bracket" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <BigStat
+                value={`$${formatUSD(high.totalHoldings)}`}
+                label="1600+ combined"
+                sublabel={`${high.userCount.toLocaleString()} users`}
+              />
+              <BigStat
+                value={`$${formatUSD(low.totalHoldings)}`}
+                label="1200–1300 combined"
+                sublabel={`${low.userCount.toLocaleString()} users`}
+              />
+              <BigStat
+                value={highOver1K.toLocaleString()}
+                label="1600+ users over $1K"
+                sublabel={`${highOver10K.toLocaleString()} hold over $10K`}
+              />
+              <BigStat
+                value={lowOver1K.toLocaleString()}
+                label="1200–1300 users over $1K"
+                sublabel={`${lowOver10K.toLocaleString()} hold over $10K`}
+              />
             </div>
             <Takeaway>
-              At the 75th percentile, 1600+ users hold {formatUSDExact(high.percentiles.p75)} vs {formatUSDExact(low.percentiles.p75)} for 1200–1300{p75Ratio ? ` — a ${p75Ratio}x gap` : ""}.
-              The difference widens at every level, confirming this isn&apos;t driven by a few outliers.
+              Despite being {Math.round(low.userCount / high.userCount)}× smaller, the 1600+ bracket holds ${formatUSD(high.totalHoldings)} combined.
+              {" "}{highOver1K.toLocaleString()} of them hold over $1K, including {highOver10K.toLocaleString()} with over $10K.
             </Takeaway>
           </Panel>
         );
@@ -325,5 +279,17 @@ function Takeaway({ children }: { children: React.ReactNode }) {
     <p className="mt-5 pt-4 border-t border-border/30 text-sm text-muted-foreground leading-relaxed">
       {children}
     </p>
+  );
+}
+
+function BigStat({ value, label, sublabel }: { value: string; label: string; sublabel?: string }) {
+  return (
+    <div>
+      <p className="font-mono text-2xl md:text-3xl font-semibold text-foreground tabular-nums">{value}</p>
+      <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground mt-1">{label}</p>
+      {sublabel && (
+        <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
+      )}
+    </div>
   );
 }
