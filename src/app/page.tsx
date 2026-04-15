@@ -89,10 +89,12 @@ export default function Home() {
 
       {/* Market Power */}
       {low && high && (() => {
-        const highOver10K = high.tiers.find((t) => t.label === "$10K+")?.count ?? 0;
-        const highOver1K = high.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.count, 0);
-        const lowOver10K = low.tiers.find((t) => t.label === "$10K+")?.count ?? 0;
-        const lowOver1K = low.tiers.filter((t) => ["$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const above10K = ["$10K–100K", "$100K–1M", "$1M+"];
+        const above1K = ["$1K–10K", ...above10K];
+        const highOver10K = high.tiers.filter((t) => above10K.includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const highOver1K = high.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const lowOver10K = low.tiers.filter((t) => above10K.includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const lowOver1K = low.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0);
 
         return (
           <Panel className="mb-4 md:mb-6">
@@ -129,8 +131,9 @@ export default function Home() {
 
       {/* Holdings Tiers (full width) */}
       {low && high && (() => {
-        const highOver100 = high.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
-        const lowOver100 = low.tiers.filter((t) => ["$100–1K", "$1K–10K", "$10K+"].includes(t.label)).reduce((s, t) => s + t.pct, 0);
+        const above100 = ["$100–1K", "$1K–10K", "$10K–100K", "$100K–1M", "$1M+"];
+        const highOver100 = high.tiers.filter((t) => above100.includes(t.label)).reduce((s, t) => s + t.pct, 0);
+        const lowOver100 = low.tiers.filter((t) => above100.includes(t.label)).reduce((s, t) => s + t.pct, 0);
 
         return (
           <Panel className="mb-4 md:mb-6">

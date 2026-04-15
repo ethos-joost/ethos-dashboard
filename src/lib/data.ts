@@ -61,7 +61,9 @@ const TIERS = [
   { label: "$10–100", min: 10, max: 100 },
   { label: "$100–1K", min: 100, max: 1_000 },
   { label: "$1K–10K", min: 1_000, max: 10_000 },
-  { label: "$10K+", min: 10_000, max: Infinity },
+  { label: "$10K–100K", min: 10_000, max: 100_000 },
+  { label: "$100K–1M", min: 100_000, max: 1_000_000 },
+  { label: "$1M+", min: 1_000_000, max: Infinity },
 ];
 
 const DIST_BINS = [
