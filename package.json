@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "ingest": "node scripts/ingest.mjs",
-    "enrich": "node scripts/enrich.mjs"
+    "enrich": "node scripts/enrich.mjs",
+    "enrich:hyperliquid": "node scripts/enrich-hyperliquid.mjs"
   },
   "dependencies": {
     "@ibm/plex": "^6.4.1",
