@@ -11,7 +11,8 @@
     "enrich": "node scripts/enrich.mjs",
     "enrich:hyperliquid": "node scripts/enrich-hyperliquid.mjs",
     "filter:privy": "node scripts/filter-privy-wallets.mjs",
-    "scan:1600": "node scripts/scan-1600plus.mjs"
+    "scan:1600": "node scripts/scan-1600plus.mjs",
+    "scan:zerion": "node scripts/scan-zerion.mjs"
   },
   "dependencies": {
     "@ibm/plex": "^6.4.1",
