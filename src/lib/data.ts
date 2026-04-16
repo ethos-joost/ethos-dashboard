@@ -1,4 +1,4 @@
-import profilesData from "@/data/profiles-export.json";
+import pg from "pg";
 
 export interface StoredProfile {
   profileId: number;
@@ -100,8 +100,48 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.min(idx, sorted.length - 1)];
 }
 
-export function getDashboardData(): DashboardData {
-  const allProfiles = profilesData.profiles as StoredProfile[];
+async function fetchProfiles(): Promise<StoredProfile[]> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl) throw new Error("SUPABASE_URL not set");
+
+  const pool = new pg.Pool({
+    connectionString: supabaseUrl,
+    ssl: { rejectUnauthorized: false },
+    max: 2,
+  });
+
+  const { rows } = await pool.query("SELECT * FROM profiles ORDER BY score DESC");
+  await pool.end();
+
+  return rows.map((r) => ({
+    profileId: r.profile_id,
+    score: r.score,
+    displayName: r.display_name,
+    addresses: r.addresses,
+    holdingsUSD: parseFloat(r.holdings_usd),
+    holdingsEvm: parseFloat(r.holdings_evm),
+    holdingsDefi: parseFloat(r.holdings_defi ?? "0"),
+    holdingsNfts: parseFloat(r.holdings_nfts),
+    holdingsHyperliquid: parseFloat(r.holdings_hyperliquid),
+    holdingsHyperEvm: parseFloat(r.holdings_hyperevm ?? "0"),
+    scanSource: r.scan_source,
+    vouchGivenEth: parseFloat(r.vouch_given_eth ?? "0"),
+    vouchGivenCount: r.vouch_given_count,
+    vouchReceivedEth: parseFloat(r.vouch_received_eth ?? "0"),
+    vouchReceivedCount: r.vouch_received_count,
+    reviewsPositive: r.reviews_positive,
+    reviewsNeutral: r.reviews_neutral,
+    reviewsNegative: r.reviews_negative,
+    humanVerified: r.human_verified,
+    xpTotal: r.xp_total,
+    influenceFactor: r.influence_factor,
+    influenceFactorPercentile: parseFloat(r.influence_factor_percentile ?? "0"),
+    updatedAt: r.updated_at?.toISOString(),
+  }));
+}
+
+export async function getDashboardData(): Promise<DashboardData> {
+  const allProfiles = await fetchProfiles();
 
   const bracketProfiles = new Map<string, StoredProfile[]>();
   const bracketValues = new Map<string, number[]>();
@@ -268,9 +308,9 @@ export function getDashboardData(): DashboardData {
   return {
     brackets,
     totalUsers: inBrackets.length,
-    fetchedAt: profilesData.exportedAt,
+    fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
-    lastIngestedAt: profilesData.lastIngestedAt,
+    lastIngestedAt: null,
     zerionCoverage,
     multiplier,
     medianMultiplier,

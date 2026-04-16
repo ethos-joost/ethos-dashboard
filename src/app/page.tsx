@@ -9,8 +9,11 @@ function formatUSD(value: number): string {
   return value.toFixed(0);
 }
 
-export default function Home() {
-  const data = getDashboardData();
+// Revalidate every hour — data refreshes without redeploy
+export const revalidate = 3600;
+
+export default async function Home() {
+  const data = await getDashboardData();
   const { brackets, totalUsers, multiplier, medianMultiplier, profilesWithHoldings, lastIngestedAt } = data;
 
   const low = brackets.find((b) => b.label === "1200\u20131300");
