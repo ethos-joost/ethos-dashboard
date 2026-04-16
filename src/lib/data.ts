@@ -56,10 +56,20 @@ export interface BracketData {
   totalHl: number;
 }
 
+export interface ClientProfile {
+  score: number;
+  holdingsUSD: number;
+  holdingsDefi: number;
+  holdingsNfts: number;
+  holdingsHyperliquid: number;
+  scanSource: string | null;
+}
+
 export interface DashboardData {
   brackets: BracketData[];
   totalUsers: number;
   sliderProfiles: { score: number; holdingsUSD: number }[];
+  clientProfiles: ClientProfile[];
   fetchedAt: string;
   profilesWithHoldings: number;
   lastIngestedAt: string | null;
@@ -308,15 +318,24 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { bracket: b.label, scanned, total };
   });
 
-  // Lightweight score/holdings pairs for the interactive slider
-  const sliderProfiles = allProfiles
+  // Lightweight data for client-side interactive components
+  const clientProfiles: ClientProfile[] = allProfiles
     .filter((p) => p.score >= 1200 && isFinite(p.holdingsUSD))
-    .map((p) => ({ score: p.score, holdingsUSD: p.holdingsUSD }));
+    .map((p) => ({
+      score: p.score,
+      holdingsUSD: p.holdingsUSD,
+      holdingsDefi: p.holdingsDefi ?? 0,
+      holdingsNfts: p.holdingsNfts ?? 0,
+      holdingsHyperliquid: p.holdingsHyperliquid ?? 0,
+      scanSource: p.scanSource ?? null,
+    }));
+  const sliderProfiles = clientProfiles.map((p) => ({ score: p.score, holdingsUSD: p.holdingsUSD }));
 
   return {
     brackets,
     totalUsers: inBrackets.length,
     sliderProfiles,
+    clientProfiles,
     fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
     lastIngestedAt: null,
