@@ -16,14 +16,24 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 import { readFileSync, writeFileSync } from "fs";
+import pg from "pg";
+const { Pool } = pg;
 
 const EXPORT_PATH = "src/data/profiles-export.json";
 const ZERION_KEY = process.env.ZERION_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
 
 if (!ZERION_KEY) {
   console.error("Missing ZERION_API_KEY in .env.local");
   process.exit(1);
 }
+
+const supabasePool = SUPABASE_URL
+  ? new Pool({ connectionString: SUPABASE_URL, ssl: { rejectUnauthorized: false }, max: 3 })
+  : null;
+
+if (supabasePool) console.log("Supabase backup enabled.");
+else console.warn("No SUPABASE_URL — writing to JSON only.");
 
 const AUTH = "Basic " + Buffer.from(ZERION_KEY + ":").toString("base64");
 // Developer tier: 2K/day, 10 RPS
@@ -192,6 +202,15 @@ async function main() {
         profile.holdingsUSD = Math.round((evmTotal + nftTotal + hl + hevm) * 100) / 100;
         profile.scanSource = "zerion";
 
+        // Backup to Supabase
+        if (supabasePool) {
+          try {
+            await upsertToSupabase(profile);
+          } catch (err) {
+            console.error(`\n  Supabase error for ${profile.profileId}:`, err.message);
+          }
+        }
+
         done++;
         if (done % 5 === 0) {
           const elapsed = (Date.now() - startTime) / 1000;
@@ -202,7 +221,7 @@ async function main() {
           );
         }
 
-        // Save every 25 profiles
+        // Save JSON every 25 profiles
         if (done % 25 === 0) {
           data.exportedAt = new Date().toISOString();
           writeFileSync(EXPORT_PATH, JSON.stringify(data, null, 2));
@@ -218,9 +237,50 @@ async function main() {
   data.exportedAt = new Date().toISOString();
   writeFileSync(EXPORT_PATH, JSON.stringify(data, null, 2));
 
+  if (supabasePool) await supabasePool.end();
+
   console.log(
     `\nDone! ${done} profiles, ${apiCalls} API calls in ${((Date.now() - startTime) / 60000).toFixed(1)}min.`
   );
+}
+
+async function upsertToSupabase(p) {
+  const client = await supabasePool.connect();
+  try {
+    await client.query(
+      `INSERT INTO profiles (
+         profile_id, score, display_name, addresses,
+         holdings_usd, holdings_evm, holdings_defi, holdings_nfts,
+         holdings_hyperliquid, holdings_hyperevm, scan_source,
+         vouch_given_eth, vouch_given_count, vouch_received_eth, vouch_received_count,
+         reviews_positive, reviews_neutral, reviews_negative,
+         human_verified, xp_total, influence_factor, influence_factor_percentile,
+         updated_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,NOW())
+       ON CONFLICT (profile_id) DO UPDATE SET
+         score = EXCLUDED.score, display_name = EXCLUDED.display_name, addresses = EXCLUDED.addresses,
+         holdings_usd = EXCLUDED.holdings_usd, holdings_evm = EXCLUDED.holdings_evm,
+         holdings_defi = EXCLUDED.holdings_defi, holdings_nfts = EXCLUDED.holdings_nfts,
+         holdings_hyperliquid = EXCLUDED.holdings_hyperliquid, holdings_hyperevm = EXCLUDED.holdings_hyperevm,
+         scan_source = EXCLUDED.scan_source,
+         vouch_given_eth = EXCLUDED.vouch_given_eth, vouch_given_count = EXCLUDED.vouch_given_count,
+         vouch_received_eth = EXCLUDED.vouch_received_eth, vouch_received_count = EXCLUDED.vouch_received_count,
+         reviews_positive = EXCLUDED.reviews_positive, reviews_neutral = EXCLUDED.reviews_neutral,
+         reviews_negative = EXCLUDED.reviews_negative, human_verified = EXCLUDED.human_verified,
+         xp_total = EXCLUDED.xp_total, influence_factor = EXCLUDED.influence_factor,
+         influence_factor_percentile = EXCLUDED.influence_factor_percentile, updated_at = NOW()`,
+      [
+        p.profileId, p.score, p.displayName, p.addresses,
+        p.holdingsUSD, p.holdingsEvm ?? 0, p.holdingsDefi ?? 0, p.holdingsNfts ?? 0,
+        p.holdingsHyperliquid ?? 0, p.holdingsHyperEvm ?? 0, p.scanSource ?? "zerion",
+        p.vouchGivenEth ?? 0, p.vouchGivenCount ?? 0, p.vouchReceivedEth ?? 0, p.vouchReceivedCount ?? 0,
+        p.reviewsPositive ?? 0, p.reviewsNeutral ?? 0, p.reviewsNegative ?? 0,
+        p.humanVerified ?? false, p.xpTotal ?? 0, p.influenceFactor ?? 0, p.influenceFactorPercentile ?? 0,
+      ]
+    );
+  } finally {
+    client.release();
+  }
 }
 
 main().catch((err) => { console.error("Fatal:", err); process.exit(1); });
