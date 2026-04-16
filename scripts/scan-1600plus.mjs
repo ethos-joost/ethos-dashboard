@@ -127,9 +127,21 @@ async function scanWallet(addresses) {
 async function main() {
   const data = JSON.parse(readFileSync(EXPORT_PATH, "utf-8"));
   const maxArg = parseInt(process.argv.find((a) => a.startsWith("--max="))?.split("=")[1] ?? "0");
-  let targets = data.profiles.filter((p) => p.score >= 1600);
+  const bracketArg = process.argv.find((a) => a.startsWith("--bracket="))?.split("=")[1] ?? "1600";
+  const topArg = parseInt(process.argv.find((a) => a.startsWith("--top="))?.split("=")[1] ?? "0");
+
+  let targets;
+  if (bracketArg === "low") {
+    targets = data.profiles.filter((p) => p.score >= 1200 && p.score < 1300);
+  } else {
+    targets = data.profiles.filter((p) => p.score >= 1600);
+  }
+
+  if (topArg > 0) {
+    targets = [...targets].sort((a, b) => (b.holdingsUSD ?? 0) - (a.holdingsUSD ?? 0)).slice(0, topArg);
+  }
   if (maxArg > 0) targets = targets.slice(0, maxArg);
-  console.log(`Scanning ${targets.length} profiles in 1600+ bracket...`);
+  console.log(`Scanning ${targets.length} profiles in ${bracketArg === "low" ? "1200-1300" : "1600+"} bracket...`);
 
   const queue = [...targets];
   let done = 0;
