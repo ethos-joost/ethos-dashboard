@@ -59,12 +59,12 @@ export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
           }}
         />
         <Bar
-          dataKey="Avg"
+          dataKey="Median"
           fill="hsl(0 0% 9%)"
           radius={[3, 3, 0, 0]}
         />
         <Bar
-          dataKey="Median"
+          dataKey="Avg"
           fill="hsl(0 0% 72%)"
           radius={[3, 3, 0, 0]}
         />

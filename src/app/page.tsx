@@ -35,24 +35,18 @@ export default async function Home() {
       {/* Headline + Stats: 2-col on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
         {/* Headline takes 2/3 */}
-        {multiplier && (
+        {medianMultiplier && (
           <Panel className="lg:col-span-2">
             <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
               Key Insight
             </p>
             <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
-              On average users with a score{" "}
-              <span className="font-semibold">higher than 1600</span> have{" "}
-              <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">{multiplier}x</span>{" "}
-              the purchasing power of users with a score{" "}
+              The typical user with a score{" "}
+              <span className="font-semibold">higher than 1600</span> has{" "}
+              <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">{medianMultiplier}x</span>{" "}
+              the purchasing power of a user with a score{" "}
               <span className="font-semibold">between 1200–1300</span>
             </p>
-            {medianMultiplier && (
-              <p className="text-sm md:text-base text-muted-foreground mt-3 md:mt-4 font-light wrap-break-word">
-                At the median — that gap is{" "}
-                <span className="font-mono font-semibold text-foreground">{medianMultiplier}x</span>
-              </p>
-            )}
           </Panel>
         )}
 
@@ -84,8 +78,8 @@ export default async function Home() {
           <SectionHeader title="Holdings Comparison" />
           <HoldingsChart brackets={[low, high]} />
           <Takeaway>
-            The average 1600+ user holds ${formatUSD(high.trimmedAvgHoldings)} compared to ${formatUSD(low.trimmedAvgHoldings)} for 1200–1300 users.
-            Even at the median the gap holds: ${formatUSD(high.medianHoldings)} vs ${formatUSD(low.medianHoldings)}.
+            The typical 1600+ user holds ${formatUSD(high.medianHoldings)} compared to ${formatUSD(low.medianHoldings)} for 1200–1300 users.
+            At the average, the gap is ${formatUSD(high.trimmedAvgHoldings)} vs ${formatUSD(low.trimmedAvgHoldings)}.
           </Takeaway>
         </Panel>
       )}
@@ -294,8 +288,8 @@ function BracketCard({
       <div className="space-y-3">
         <Row label="Users" value={bracket.userCount.toLocaleString()} muted={highlight} />
         <div className={`border-t ${highlight ? "border-background/10" : "border-border/50"}`} />
-        <Row label="Avg" value={`$${formatUSD(bracket.trimmedAvgHoldings)}`} muted={highlight} large />
-        <Row label="Median" value={`$${formatUSD(bracket.medianHoldings)}`} muted={highlight} />
+        <Row label="Median" value={`$${formatUSD(bracket.medianHoldings)}`} muted={highlight} large />
+        <Row label="Avg" value={`$${formatUSD(bracket.trimmedAvgHoldings)}`} muted={highlight} />
       </div>
     </div>
   );
