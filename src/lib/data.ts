@@ -73,8 +73,7 @@ const BRACKETS = [
 ];
 
 const TIERS = [
-  { label: "$0–10", min: 0, max: 10 },
-  { label: "$10–100", min: 10, max: 100 },
+  { label: "$0–100", min: 0, max: 100 },
   { label: "$100–1K", min: 100, max: 1_000 },
   { label: "$1K–10K", min: 1_000, max: 10_000 },
   { label: "$10K–100K", min: 10_000, max: 100_000 },
