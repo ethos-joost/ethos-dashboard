@@ -36,11 +36,10 @@ if (supabasePool) console.log("Supabase backup enabled.");
 else console.warn("No SUPABASE_URL — writing to JSON only.");
 
 const AUTH = "Basic " + Buffer.from(ZERION_KEY + ":").toString("base64");
-// Developer tier: 2K/day, 10 RPS
-// Stay safe: 1 worker, 500ms between calls = 2 req/s (well under 10 RPS)
-// ~1,100 calls needed for 1600+ = fits within 2K daily limit
-const CONCURRENCY = 1;
-const DELAY_MS = 500;
+// Builder tier: 250K/month, 50 RPS
+// 20 workers × 100ms delay = ~40 actual req/s
+const CONCURRENCY = 20;
+const DELAY_MS = 100;
 
 const bracketArg = process.argv.find((a) => a.startsWith("--bracket="))?.split("=")[1] ?? "1600";
 const maxArg = parseInt(process.argv.find((a) => a.startsWith("--max="))?.split("=")[1] ?? "0") || Infinity;
@@ -141,8 +140,12 @@ async function main() {
   const data = JSON.parse(readFileSync(EXPORT_PATH, "utf-8"));
 
   let targets;
-  if (bracketArg === "low") {
+  if (bracketArg === "all") {
+    targets = data.profiles.filter((p) => p.score >= 1200);
+  } else if (bracketArg === "low") {
     targets = data.profiles.filter((p) => p.score >= 1200 && p.score < 1300);
+  } else if (bracketArg === "mid") {
+    targets = data.profiles.filter((p) => p.score >= 1300 && p.score < 1600);
   } else {
     targets = data.profiles.filter((p) => p.score >= 1600);
   }
@@ -164,14 +167,28 @@ async function main() {
   const totalCalls = totalWallets * 2;
   console.log(`Scanning ${targets.length} profiles (${totalWallets} wallets, ~${totalCalls} API calls).`);
 
-  if (totalCalls > 2000) {
-    console.warn(`⚠️  Exceeds free tier limit of 2K/day. Will take ${Math.ceil(totalCalls / 2000)} days or hit rate limit.`);
+  if (totalCalls > 250000) {
+    console.warn(`⚠️  Exceeds monthly limit of 250K. May need to split across months.`);
   }
 
   let done = 0;
   let apiCalls = 0;
   const startTime = Date.now();
   const queue = [...targets];
+  const supabaseQueue = [];
+  let supabaseFlushing = Promise.resolve();
+
+  function flushSupabase() {
+    const batch = supabaseQueue.splice(0);
+    if (batch.length === 0) return;
+    supabaseFlushing = supabaseFlushing.then(async () => {
+      try {
+        for (const p of batch) await upsertToSupabase(p);
+      } catch (err) {
+        console.error(`\n  Supabase batch error:`, err.message);
+      }
+    });
+  }
 
   async function worker() {
     while (queue.length > 0) {
@@ -202,13 +219,10 @@ async function main() {
         profile.holdingsUSD = Math.round((evmTotal + nftTotal + hl + hevm) * 100) / 100;
         profile.scanSource = "zerion";
 
-        // Backup to Supabase
+        // Queue Supabase backup (non-blocking)
         if (supabasePool) {
-          try {
-            await upsertToSupabase(profile);
-          } catch (err) {
-            console.error(`\n  Supabase error for ${profile.profileId}:`, err.message);
-          }
+          supabaseQueue.push({ ...profile });
+          if (supabaseQueue.length >= 20) flushSupabase();
         }
 
         done++;
@@ -221,8 +235,8 @@ async function main() {
           );
         }
 
-        // Save JSON every 25 profiles
-        if (done % 25 === 0) {
+        // Save JSON every 10 profiles (frequent saves to prevent data loss)
+        if (done % 10 === 0) {
           data.exportedAt = new Date().toISOString();
           writeFileSync(EXPORT_PATH, JSON.stringify(data, null, 2));
         }
@@ -237,7 +251,12 @@ async function main() {
   data.exportedAt = new Date().toISOString();
   writeFileSync(EXPORT_PATH, JSON.stringify(data, null, 2));
 
-  if (supabasePool) await supabasePool.end();
+  // Flush remaining Supabase queue
+  if (supabasePool) {
+    flushSupabase();
+    await supabaseFlushing;
+    await supabasePool.end();
+  }
 
   console.log(
     `\nDone! ${done} profiles, ${apiCalls} API calls in ${((Date.now() - startTime) / 60000).toFixed(1)}min.`

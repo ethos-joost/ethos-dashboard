@@ -20,6 +20,9 @@
 # production
 /build
 
+# data (fetched from Supabase at build time)
+src/data/profiles-export.json
+
 # misc
 .DS_Store
 *.pem
