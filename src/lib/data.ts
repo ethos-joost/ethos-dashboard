@@ -59,6 +59,7 @@ export interface BracketData {
 export interface DashboardData {
   brackets: BracketData[];
   totalUsers: number;
+  sliderProfiles: { score: number; holdingsUSD: number }[];
   fetchedAt: string;
   profilesWithHoldings: number;
   lastIngestedAt: string | null;
@@ -307,9 +308,15 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { bracket: b.label, scanned, total };
   });
 
+  // Lightweight score/holdings pairs for the interactive slider
+  const sliderProfiles = allProfiles
+    .filter((p) => p.score >= 1200 && isFinite(p.holdingsUSD))
+    .map((p) => ({ score: p.score, holdingsUSD: p.holdingsUSD }));
+
   return {
     brackets,
     totalUsers: inBrackets.length,
+    sliderProfiles,
     fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
     lastIngestedAt: null,

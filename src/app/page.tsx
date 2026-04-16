@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { getDashboardData, type BracketData } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
+import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
+import { ScoreSlider } from "@/components/score-slider";
 
 function formatUSD(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
@@ -36,22 +38,27 @@ export default async function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
         {/* Headline takes 2/3 */}
         {medianMultiplier && (
-          <Panel className="lg:col-span-2">
-            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
-              Key Insight
-            </p>
-            <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
-              The typical user with a score{" "}
-              <span className="font-semibold">higher than 1600</span> has{" "}
-              <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">{medianMultiplier}x</span>{" "}
-              the purchasing power of a user with a score{" "}
-              <span className="font-semibold">between 1200–1300</span>
-            </p>
-          </Panel>
+          <FadeIn className="lg:col-span-2">
+            <Panel>
+              <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
+                Key Insight
+              </p>
+              <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
+                The typical user with a score{" "}
+                <span className="font-semibold">higher than 1600</span> has{" "}
+                <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">
+                  <CountUp value={medianMultiplier} decimals={1} suffix="x" />
+                </span>{" "}
+                the purchasing power of a user with a score{" "}
+                <span className="font-semibold">between 1200–1300</span>
+              </p>
+            </Panel>
+          </FadeIn>
         )}
 
         {/* Stats takes 1/3 */}
-        <Panel className="lg:col-span-1">
+        <FadeIn delay={0.2} className="lg:col-span-1">
+        <Panel>
           <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4 md:mb-5">
             Coverage
           </p>
@@ -62,26 +69,27 @@ export default async function Home() {
             <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
           </div>
         </Panel>
+        </FadeIn>
       </div>
 
       {/* Bracket cards: side-by-side */}
       {low && high && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-          <BracketCard bracket={low} label="1200–1300" />
-          <BracketCard bracket={high} label="1600+" highlight />
+          <FadeIn><BracketCard bracket={low} label="1200–1300" /></FadeIn>
+          <FadeIn delay={0.15}><BracketCard bracket={high} label="1600+" highlight /></FadeIn>
         </div>
       )}
 
       {/* Holdings Comparison (full width) */}
       {low && high && (
-        <Panel className="mb-4 md:mb-6">
+        <FadeIn><Panel className="mb-4 md:mb-6">
           <SectionHeader title="Holdings Comparison" />
           <HoldingsChart brackets={[low, high]} />
           <Takeaway>
             The typical 1600+ user holds ${formatUSD(high.medianHoldings)} compared to ${formatUSD(low.medianHoldings)} for 1200–1300 users.
             At the average, the gap is ${formatUSD(high.trimmedAvgHoldings)} vs ${formatUSD(low.trimmedAvgHoldings)}.
           </Takeaway>
-        </Panel>
+        </Panel></FadeIn>
       )}
 
       {/* Market Power */}
@@ -94,7 +102,7 @@ export default async function Home() {
         const lowOver1K = low.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0);
 
         return (
-          <Panel className="mb-4 md:mb-6">
+          <FadeIn><Panel className="mb-4 md:mb-6">
             <SectionHeader title="Market Power" description="Combined holdings and high-value user counts per bracket" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               <BigStat
@@ -122,13 +130,13 @@ export default async function Home() {
               Despite being {Math.round(low.userCount / high.userCount)}× smaller, the 1600+ bracket holds ${formatUSD(high.totalHoldings)} combined.
               {" "}{highOver1K.toLocaleString()} of them hold over $1K, including {highOver10K.toLocaleString()} with over $10K.
             </Takeaway>
-          </Panel>
+          </Panel></FadeIn>
         );
       })()}
 
       {/* DeFi Participation */}
       {low && high && (
-        <Panel className="mb-4 md:mb-6">
+        <FadeIn><Panel className="mb-4 md:mb-6">
           <SectionHeader title="Capital Deployment" description="How users deploy their assets across DeFi, NFTs, and Hyperliquid" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {[
@@ -168,7 +176,7 @@ export default async function Home() {
               {" "}1600+ users have ${formatUSD(high.totalDefi)} deposited across lending, staking, and yield protocols.
             </Takeaway>
           )}
-        </Panel>
+        </Panel></FadeIn>
       )}
 
       {/* Holdings Tiers (full width) */}
@@ -178,7 +186,7 @@ export default async function Home() {
         const lowOver100 = low.tiers.filter((t) => above100.includes(t.label)).reduce((s, t) => s + t.pct, 0);
 
         return (
-          <Panel className="mb-4 md:mb-6">
+          <FadeIn><Panel className="mb-4 md:mb-6">
             <SectionHeader title="Holdings Tiers" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {[
@@ -190,14 +198,11 @@ export default async function Home() {
                   <div className="space-y-2">
                     {bracket.tiers.map((tier) => (
                       <div key={tier.label} className="flex items-center gap-2 md:gap-3">
-                        <span className="font-mono text-[10px] md:text-xs text-muted-foreground w-14 md:w-16 shrink-0">
+                        <span className="font-mono text-[10px] md:text-xs text-muted-foreground w-18 md:w-20 shrink-0 whitespace-nowrap">
                           {tier.label}
                         </span>
                         <div className="flex-1 h-5 bg-muted/50 rounded-sm overflow-hidden">
-                          <div
-                            className="h-full bg-foreground/80 rounded-sm"
-                            style={{ width: `${Math.max(tier.pct, 0.5)}%` }}
-                          />
+                          <AnimatedBar pct={tier.pct} className="h-full bg-foreground/80 rounded-sm" />
                         </div>
                         <span className="font-mono text-[10px] md:text-xs tabular-nums w-10 md:w-12 text-right shrink-0">
                           {tier.pct}%
@@ -212,9 +217,20 @@ export default async function Home() {
               {highOver100.toFixed(1)}% of 1600+ users hold over $100, compared to {lowOver100.toFixed(1)}% of 1200–1300 users.
               High-credibility users are far more likely to have meaningful on-chain assets.
             </Takeaway>
-          </Panel>
+          </Panel></FadeIn>
         );
       })()}
+
+      {/* Score Explorer */}
+      <FadeIn>
+        <Panel className="mb-4 md:mb-6">
+          <SectionHeader
+            title="Score Explorer"
+            description="Drag the slider to see how purchasing power changes at different score thresholds"
+          />
+          <ScoreSlider profiles={data.sliderProfiles} />
+        </Panel>
+      </FadeIn>
 
       {/* Footer */}
       <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
