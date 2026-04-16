@@ -115,8 +115,6 @@ export function getDashboardData(): DashboardData {
       (b) => profile.score >= b.min && profile.score < b.max
     );
     if (!bracket) continue;
-    // Only use Zerion-scanned profiles for consistent methodology
-    if (profile.scanSource !== "zerion") continue;
     const val = profile.holdingsUSD;
     if (isNaN(val) || !isFinite(val) || val <= 0) continue;
     bracketProfiles.get(bracket.label)!.push(profile);
@@ -255,9 +253,8 @@ export function getDashboardData(): DashboardData {
     medianMultiplier = Math.round((high.medianHoldings / low.medianHoldings) * 10) / 10;
   }
 
-  // Only count Zerion-scanned profiles in displayed brackets
   const inBrackets = allProfiles.filter((p) =>
-    BRACKETS.some((b) => p.score >= b.min && p.score < b.max) && p.scanSource === "zerion"
+    BRACKETS.some((b) => p.score >= b.min && p.score < b.max)
   );
   const profilesWithHoldings = inBrackets.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
 
