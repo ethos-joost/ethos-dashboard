@@ -129,6 +129,51 @@ export default function Home() {
         );
       })()}
 
+      {/* DeFi Participation */}
+      {low && high && (
+        <Panel className="mb-4 md:mb-6">
+          <SectionHeader title="Capital Deployment" description="How users deploy their assets across DeFi, NFTs, and Hyperliquid" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {[
+              { bracket: high, label: "1600+" },
+              { bracket: low, label: "1200–1300" },
+            ].map(({ bracket, label }) => (
+              <div key={label}>
+                <p className="font-mono text-sm font-semibold mb-4">{label}</p>
+                <div className="space-y-3">
+                  <DefiRow
+                    label="DeFi active"
+                    value={`${bracket.defiActivePct}%`}
+                    sublabel={`${bracket.defiActiveCount.toLocaleString()} users`}
+                  />
+                  <DefiRow
+                    label="Avg in DeFi"
+                    value={`$${formatUSD(bracket.avgDefiHoldings)}`}
+                    sublabel={`$${formatUSD(bracket.totalDefi)} total deposited`}
+                  />
+                  <DefiRow
+                    label="Avg in NFTs"
+                    value={`$${formatUSD(bracket.avgNftHoldings)}`}
+                    sublabel={`$${formatUSD(bracket.totalNfts)} total`}
+                  />
+                  <DefiRow
+                    label="Avg in Hyperliquid"
+                    value={`$${formatUSD(bracket.avgHlHoldings)}`}
+                    sublabel={`$${formatUSD(bracket.totalHl)} total`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          {high.defiActivePct > 0 && (
+            <Takeaway>
+              {high.defiActivePct}% of 1600+ users actively deploy capital in DeFi protocols, compared to {low.defiActivePct}% in 1200–1300.
+              {" "}1600+ users have ${formatUSD(high.totalDefi)} deposited across lending, staking, and yield protocols.
+            </Takeaway>
+          )}
+        </Panel>
+      )}
+
       {/* Holdings Tiers (full width) */}
       {low && high && (() => {
         const above100 = ["$100–1K", "$1K–10K", "$10K–100K", "$100K–1M", "$1M+"];
@@ -175,13 +220,23 @@ export default function Home() {
       })()}
 
       {/* Footer */}
-      <p className="font-mono text-[10px] tracking-wide text-muted-foreground text-center">
-        {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-        {" "}&middot;{" "}Ethereum + Base{" "}&middot;{" "}Trimmed mean (5%)
-        {lastIngestedAt && (
-          <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
-        )}
-      </p>
+      <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
+        <p>
+          {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+          {" "}&middot;{" "}Multichain (EVM + Hyperliquid + HyperEVM){" "}&middot;{" "}Trimmed mean (5%)
+          {lastIngestedAt && (
+            <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
+          )}
+        </p>
+        <p>
+          Data source: Zerion (DeFi + tokens + NFTs) + Hyperliquid API
+          {data.zerionCoverage.map((c) => (
+            <span key={c.bracket}>
+              {" "}&middot;{" "}{c.bracket}: {c.scanned.toLocaleString()}/{c.total.toLocaleString()} profiles scanned
+            </span>
+          ))}
+        </p>
+      </div>
     </div>
   );
 }
@@ -282,6 +337,18 @@ function Takeaway({ children }: { children: React.ReactNode }) {
     <p className="mt-5 pt-4 border-t border-border/30 text-sm text-muted-foreground leading-relaxed">
       {children}
     </p>
+  );
+}
+
+function DefiRow({ label, value, sublabel }: { label: string; value: string; sublabel: string }) {
+  return (
+    <div className="flex justify-between items-baseline gap-2">
+      <span className="font-mono text-xs text-muted-foreground">{label}</span>
+      <div className="text-right">
+        <span className="font-mono text-sm font-semibold">{value}</span>
+        <p className="font-mono text-[10px] text-muted-foreground">{sublabel}</p>
+      </div>
+    </div>
   );
 }
 

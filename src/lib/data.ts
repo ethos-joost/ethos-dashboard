@@ -6,6 +6,12 @@ export interface StoredProfile {
   displayName: string;
   addresses: string[];
   holdingsUSD: number;
+  holdingsEvm?: number;
+  holdingsDefi?: number;
+  holdingsNfts?: number;
+  holdingsHyperliquid?: number;
+  holdingsHyperEvm?: number;
+  scanSource?: string;
   updatedAt: string;
   // Enrichment from Ethos Postgres (optional for backwards compat)
   vouchGivenEth?: number;
@@ -39,6 +45,15 @@ export interface BracketData {
   vouchReceivedEthTotal: number;
   avgReviewsReceived: number;
   avgXp: number;
+  // DeFi participation
+  defiActiveCount: number;
+  defiActivePct: number;
+  avgDefiHoldings: number;
+  avgNftHoldings: number;
+  avgHlHoldings: number;
+  totalDefi: number;
+  totalNfts: number;
+  totalHl: number;
 }
 
 export interface DashboardData {
@@ -49,6 +64,7 @@ export interface DashboardData {
   lastIngestedAt: string | null;
   multiplier: number | null;
   medianMultiplier: number | null;
+  zerionCoverage: { bracket: string; scanned: number; total: number }[];
 }
 
 const BRACKETS = [
@@ -99,8 +115,9 @@ export function getDashboardData(): DashboardData {
       (b) => profile.score >= b.min && profile.score < b.max
     );
     if (!bracket) continue;
+    // Only use Zerion-scanned profiles for consistent methodology
+    if (profile.scanSource !== "zerion") continue;
     const val = profile.holdingsUSD;
-    // Only count profiles with actual on-chain holdings > $0 — excludes dormant/signer-only wallets
     if (isNaN(val) || !isFinite(val) || val <= 0) continue;
     bracketProfiles.get(bracket.label)!.push(profile);
     bracketValues.get(bracket.label)!.push(val);
@@ -206,6 +223,23 @@ export function getDashboardData(): DashboardData {
       vouchReceivedEthTotal: Math.round(vouchReceivedEthTotal * 100) / 100,
       avgReviewsReceived: Math.round(avgReviewsReceived * 10) / 10,
       avgXp: Math.round(avgXp),
+      // DeFi participation
+      defiActiveCount: profiles.filter((p) => (p.holdingsDefi ?? 0) > 0).length,
+      defiActivePct: profiles.length > 0
+        ? Math.round((profiles.filter((p) => (p.holdingsDefi ?? 0) > 0).length / profiles.length) * 1000) / 10
+        : 0,
+      avgDefiHoldings: profiles.length > 0
+        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsDefi ?? 0), 0) / profiles.length * 100) / 100
+        : 0,
+      avgNftHoldings: profiles.length > 0
+        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsNfts ?? 0), 0) / profiles.length * 100) / 100
+        : 0,
+      avgHlHoldings: profiles.length > 0
+        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsHyperliquid ?? 0), 0) / profiles.length * 100) / 100
+        : 0,
+      totalDefi: Math.round(profiles.reduce((s, p) => s + (p.holdingsDefi ?? 0), 0) * 100) / 100,
+      totalNfts: Math.round(profiles.reduce((s, p) => s + (p.holdingsNfts ?? 0), 0) * 100) / 100,
+      totalHl: Math.round(profiles.reduce((s, p) => s + (p.holdingsHyperliquid ?? 0), 0) * 100) / 100,
     };
   });
 
@@ -221,11 +255,18 @@ export function getDashboardData(): DashboardData {
     medianMultiplier = Math.round((high.medianHoldings / low.medianHoldings) * 10) / 10;
   }
 
-  // Only count profiles in displayed brackets so totals add up
+  // Only count Zerion-scanned profiles in displayed brackets
   const inBrackets = allProfiles.filter((p) =>
-    BRACKETS.some((b) => p.score >= b.min && p.score < b.max)
+    BRACKETS.some((b) => p.score >= b.min && p.score < b.max) && p.scanSource === "zerion"
   );
   const profilesWithHoldings = inBrackets.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
+
+  // Coverage stats
+  const zerionCoverage = BRACKETS.map((b) => {
+    const total = allProfiles.filter((p) => p.score >= b.min && p.score < b.max).length;
+    const scanned = allProfiles.filter((p) => p.score >= b.min && p.score < b.max && p.scanSource === "zerion").length;
+    return { bracket: b.label, scanned, total };
+  });
 
   return {
     brackets,
@@ -233,6 +274,7 @@ export function getDashboardData(): DashboardData {
     fetchedAt: profilesData.exportedAt,
     profilesWithHoldings,
     lastIngestedAt: profilesData.lastIngestedAt,
+    zerionCoverage,
     multiplier,
     medianMultiplier,
   };
