@@ -48,9 +48,9 @@ export interface BracketData {
   // DeFi participation
   defiActiveCount: number;
   defiActivePct: number;
-  avgDefiHoldings: number;
-  avgNftHoldings: number;
-  avgHlHoldings: number;
+  medianDefiHoldings: number;
+  medianNftHoldings: number;
+  medianHlHoldings: number;
   totalDefi: number;
   totalNfts: number;
   totalHl: number;
@@ -266,15 +266,18 @@ export async function getDashboardData(): Promise<DashboardData> {
       defiActivePct: profiles.length > 0
         ? Math.round((profiles.filter((p) => (p.holdingsDefi ?? 0) > 0).length / profiles.length) * 1000) / 10
         : 0,
-      avgDefiHoldings: profiles.length > 0
-        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsDefi ?? 0), 0) / profiles.length * 100) / 100
-        : 0,
-      avgNftHoldings: profiles.length > 0
-        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsNfts ?? 0), 0) / profiles.length * 100) / 100
-        : 0,
-      avgHlHoldings: profiles.length > 0
-        ? Math.round(profiles.reduce((s, p) => s + (p.holdingsHyperliquid ?? 0), 0) / profiles.length * 100) / 100
-        : 0,
+      medianDefiHoldings: (() => {
+        const v = profiles.map((p) => p.holdingsDefi ?? 0).filter((x) => x > 0).sort((a, b) => a - b);
+        return v.length > 0 ? Math.round(v[Math.floor(v.length / 2)] * 100) / 100 : 0;
+      })(),
+      medianNftHoldings: (() => {
+        const v = profiles.map((p) => p.holdingsNfts ?? 0).filter((x) => x > 0).sort((a, b) => a - b);
+        return v.length > 0 ? Math.round(v[Math.floor(v.length / 2)] * 100) / 100 : 0;
+      })(),
+      medianHlHoldings: (() => {
+        const v = profiles.map((p) => p.holdingsHyperliquid ?? 0).filter((x) => x > 0).sort((a, b) => a - b);
+        return v.length > 0 ? Math.round(v[Math.floor(v.length / 2)] * 100) / 100 : 0;
+      })(),
       totalDefi: Math.round(profiles.reduce((s, p) => s + (p.holdingsDefi ?? 0), 0) * 100) / 100,
       totalNfts: Math.round(profiles.reduce((s, p) => s + (p.holdingsNfts ?? 0), 0) * 100) / 100,
       totalHl: Math.round(profiles.reduce((s, p) => s + (p.holdingsHyperliquid ?? 0), 0) * 100) / 100,

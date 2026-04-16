@@ -144,18 +144,18 @@ export default async function Home() {
                     sublabel={`${bracket.defiActiveCount.toLocaleString()} users`}
                   />
                   <DefiRow
-                    label="Avg in DeFi"
-                    value={`$${formatUSD(bracket.avgDefiHoldings)}`}
+                    label="Median in DeFi"
+                    value={`$${formatUSD(bracket.medianDefiHoldings)}`}
                     sublabel={`$${formatUSD(bracket.totalDefi)} total deposited`}
                   />
                   <DefiRow
-                    label="Avg in NFTs"
-                    value={`$${formatUSD(bracket.avgNftHoldings)}`}
+                    label="Median in NFTs"
+                    value={`$${formatUSD(bracket.medianNftHoldings)}`}
                     sublabel={`$${formatUSD(bracket.totalNfts)} total`}
                   />
                   <DefiRow
-                    label="Avg in Hyperliquid"
-                    value={`$${formatUSD(bracket.avgHlHoldings)}`}
+                    label="Median in Hyperliquid"
+                    value={`$${formatUSD(bracket.medianHlHoldings)}`}
                     sublabel={`$${formatUSD(bracket.totalHl)} total`}
                   />
                 </div>
