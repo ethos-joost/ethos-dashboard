@@ -135,8 +135,8 @@ export default function Home() {
           <SectionHeader title="Capital Deployment" description="How users deploy their assets across DeFi, NFTs, and Hyperliquid" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {[
-              { bracket: high, label: "1600+" },
               { bracket: low, label: "1200–1300" },
+              { bracket: high, label: "1600+" },
             ].map(({ bracket, label }) => (
               <div key={label}>
                 <p className="font-mono text-sm font-semibold mb-4">{label}</p>
