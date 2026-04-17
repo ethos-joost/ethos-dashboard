@@ -56,9 +56,8 @@ export interface BracketData {
 export interface DashboardData {
   brackets: BracketData[];
   totalUsers: number;
-  fetchedAt: string;
   profilesWithHoldings: number;
-  lastIngestedAt: string | null;
+  lastScannedAt: string | null;
   multiplier: number | null;
   medianMultiplier: number | null;
 }
@@ -273,12 +272,16 @@ export async function getDashboardData(): Promise<DashboardData> {
   );
   const profilesWithHoldings = inBrackets.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
 
+  const lastScannedAt = inBrackets.reduce<string | null>((latest, p) => {
+    if (!p.updatedAt) return latest;
+    return latest === null || p.updatedAt > latest ? p.updatedAt : latest;
+  }, null);
+
   return {
     brackets,
     totalUsers: inBrackets.length,
-    fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
-    lastIngestedAt: null,
+    lastScannedAt,
     multiplier,
     medianMultiplier,
   };

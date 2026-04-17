@@ -16,7 +16,7 @@ export const revalidate = 3600;
 
 export default async function Home() {
   const data = await getDashboardData();
-  const { brackets, totalUsers, multiplier, medianMultiplier, profilesWithHoldings, lastIngestedAt } = data;
+  const { brackets, totalUsers, medianMultiplier, profilesWithHoldings, lastScannedAt } = data;
 
   const low = brackets.find((b) => b.label === LOW_BRACKET_LABEL);
   const high = brackets.find((b) => b.label === HIGH_BRACKET_LABEL);
@@ -266,11 +266,12 @@ export default async function Home() {
       <Panel>
         <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
           <p>
-            {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-            {" "}&middot;{" "}Zerion + Hyperliquid API
-            {lastIngestedAt && (
-              <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
+            {lastScannedAt ? (
+              <>Data last scanned {new Date(lastScannedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</>
+            ) : (
+              <>Scan date unknown</>
             )}
+            {" "}&middot;{" "}Zerion + Hyperliquid API
           </p>
           <details className="mt-3 inline-block text-left">
             <summary className="cursor-pointer hover:text-foreground transition-colors list-none select-none tracking-widest uppercase">
