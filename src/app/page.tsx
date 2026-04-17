@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getDashboardData, type BracketData } from "@/lib/data";
+import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, HIGH_BRACKET_LABEL } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
 import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
 import { ScoreSlider } from "@/components/score-slider";
@@ -18,8 +18,8 @@ export default async function Home() {
   const data = await getDashboardData();
   const { brackets, totalUsers, multiplier, medianMultiplier, profilesWithHoldings, lastIngestedAt } = data;
 
-  const low = brackets.find((b) => b.label === "1200\u20131300");
-  const high = brackets.find((b) => b.label === "1600+");
+  const low = brackets.find((b) => b.label === LOW_BRACKET_LABEL);
+  const high = brackets.find((b) => b.label === HIGH_BRACKET_LABEL);
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-10">
@@ -50,7 +50,7 @@ export default async function Home() {
                   <CountUp value={medianMultiplier} decimals={1} suffix="x" />
                 </span>{" "}
                 the purchasing power of a user with a score{" "}
-                <span className="font-semibold">between 1200–1300</span>
+                <span className="font-semibold">between {LOW_BRACKET_LABEL}</span>
               </p>
             </Panel>
           </FadeIn>
@@ -65,8 +65,8 @@ export default async function Home() {
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             <Stat label="Profiles" value={totalUsers.toLocaleString()} />
             <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-            <Stat label="1200–1300" value={low?.userCount.toLocaleString() ?? "0"} />
-            <Stat label="1600+" value={high?.userCount.toLocaleString() ?? "0"} />
+            <Stat label={LOW_BRACKET_LABEL} value={low?.userCount.toLocaleString() ?? "0"} />
+            <Stat label={HIGH_BRACKET_LABEL} value={high?.userCount.toLocaleString() ?? "0"} />
           </div>
         </Panel>
         </FadeIn>
@@ -75,8 +75,8 @@ export default async function Home() {
       {/* Bracket cards: side-by-side */}
       {low && high && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-          <FadeIn><BracketCard bracket={low} label="1200–1300" /></FadeIn>
-          <FadeIn delay={0.15}><BracketCard bracket={high} label="1600+" highlight /></FadeIn>
+          <FadeIn><BracketCard bracket={low} label={LOW_BRACKET_LABEL} /></FadeIn>
+          <FadeIn delay={0.15}><BracketCard bracket={high} label={HIGH_BRACKET_LABEL} highlight /></FadeIn>
         </div>
       )}
 
@@ -86,7 +86,7 @@ export default async function Home() {
           <SectionHeader title="Holdings Comparison" />
           <HoldingsChart brackets={[low, high]} />
           <Takeaway>
-            The typical 1600+ user holds ${formatUSD(high.medianHoldings)} compared to ${formatUSD(low.medianHoldings)} for 1200–1300 users.
+            The typical {HIGH_BRACKET_LABEL} user holds ${formatUSD(high.medianHoldings)} compared to ${formatUSD(low.medianHoldings)} for {LOW_BRACKET_LABEL} users.
             At the average, the gap is ${formatUSD(high.trimmedAvgHoldings)} vs ${formatUSD(low.trimmedAvgHoldings)}.
           </Takeaway>
         </Panel></FadeIn>
@@ -107,27 +107,27 @@ export default async function Home() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               <BigStat
                 value={`$${formatUSD(high.totalHoldings)}`}
-                label="1600+ combined"
+                label={`${HIGH_BRACKET_LABEL} combined`}
                 sublabel={`${high.userCount.toLocaleString()} users`}
               />
               <BigStat
                 value={`$${formatUSD(low.totalHoldings)}`}
-                label="1200–1300 combined"
+                label={`${LOW_BRACKET_LABEL} combined`}
                 sublabel={`${low.userCount.toLocaleString()} users`}
               />
               <BigStat
                 value={highOver1K.toLocaleString()}
-                label="1600+ users over $1K"
+                label={`${HIGH_BRACKET_LABEL} users over $1K`}
                 sublabel={`${highOver10K.toLocaleString()} hold over $10K`}
               />
               <BigStat
                 value={lowOver1K.toLocaleString()}
-                label="1200–1300 users over $1K"
+                label={`${LOW_BRACKET_LABEL} users over $1K`}
                 sublabel={`${lowOver10K.toLocaleString()} hold over $10K`}
               />
             </div>
             <Takeaway>
-              Despite being {Math.round(low.userCount / high.userCount)}× smaller, the 1600+ bracket holds ${formatUSD(high.totalHoldings)} combined.
+              Despite being {Math.round(low.userCount / high.userCount)}× smaller, the {HIGH_BRACKET_LABEL} bracket holds ${formatUSD(high.totalHoldings)} combined.
               {" "}{highOver1K.toLocaleString()} of them hold over $1K, including {highOver10K.toLocaleString()} with over $10K.
             </Takeaway>
           </Panel></FadeIn>
@@ -140,8 +140,8 @@ export default async function Home() {
           <SectionHeader title="Capital Deployment" description="How users deploy their assets across DeFi, NFTs, and Hyperliquid" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {[
-              { bracket: low, label: "1200–1300" },
-              { bracket: high, label: "1600+" },
+              { bracket: low, label: LOW_BRACKET_LABEL },
+              { bracket: high, label: HIGH_BRACKET_LABEL },
             ].map(({ bracket, label }) => (
               <div key={label}>
                 <p className="font-mono text-sm font-semibold mb-4">{label}</p>
@@ -172,8 +172,8 @@ export default async function Home() {
           </div>
           {high.defiActivePct > 0 && (
             <Takeaway>
-              {high.defiActivePct}% of 1600+ users actively deploy capital in DeFi protocols, compared to {low.defiActivePct}% in 1200–1300.
-              {" "}1600+ users have ${formatUSD(high.totalDefi)} deposited across lending, staking, and yield protocols.
+              {high.defiActivePct}% of {HIGH_BRACKET_LABEL} users actively deploy capital in DeFi protocols, compared to {low.defiActivePct}% in {LOW_BRACKET_LABEL}.
+              {" "}{HIGH_BRACKET_LABEL} users have ${formatUSD(high.totalDefi)} deposited across lending, staking, and yield protocols.
             </Takeaway>
           )}
         </Panel></FadeIn>
@@ -190,8 +190,8 @@ export default async function Home() {
             <SectionHeader title="Holdings Tiers" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {[
-                { bracket: low, label: "1200–1300" },
-                { bracket: high, label: "1600+" },
+                { bracket: low, label: LOW_BRACKET_LABEL },
+                { bracket: high, label: HIGH_BRACKET_LABEL },
               ].map(({ bracket, label }) => (
                 <div key={label}>
                   <p className="font-mono text-sm font-semibold mb-3">{label}</p>
@@ -214,7 +214,7 @@ export default async function Home() {
               ))}
             </div>
             <Takeaway>
-              {highOver100.toFixed(1)}% of 1600+ users hold over $100, compared to {lowOver100.toFixed(1)}% of 1200–1300 users.
+              {highOver100.toFixed(1)}% of {HIGH_BRACKET_LABEL} users hold over $100, compared to {lowOver100.toFixed(1)}% of {LOW_BRACKET_LABEL} users.
               High-credibility users are far more likely to have meaningful on-chain assets.
             </Takeaway>
           </Panel></FadeIn>

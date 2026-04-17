@@ -68,9 +68,12 @@ export interface DashboardData {
   zerionCoverage: { bracket: string; scanned: number; total: number }[];
 }
 
+export const LOW_BRACKET_LABEL = "1200\u20131300";
+export const HIGH_BRACKET_LABEL = "1600+";
+
 const BRACKETS = [
-  { label: "1200–1300", min: 1200, max: 1300 },
-  { label: "1600+", min: 1600, max: Infinity },
+  { label: LOW_BRACKET_LABEL, min: 1200, max: 1300 },
+  { label: HIGH_BRACKET_LABEL, min: 1600, max: Infinity },
 ];
 
 const TIERS = [
@@ -284,8 +287,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     };
   });
 
-  const high = brackets.find((b) => b.label === "1600+");
-  const low = brackets.find((b) => b.label === "1200–1300");
+  const high = brackets.find((b) => b.label === HIGH_BRACKET_LABEL);
+  const low = brackets.find((b) => b.label === LOW_BRACKET_LABEL);
   let multiplier: number | null = null;
   if (high && low && low.trimmedAvgHoldings > 0 && high.trimmedAvgHoldings > 0) {
     multiplier = Math.round((high.trimmedAvgHoldings / low.trimmedAvgHoldings) * 10) / 10;
