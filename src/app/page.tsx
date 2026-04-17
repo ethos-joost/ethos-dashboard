@@ -232,18 +232,10 @@ export default async function Home() {
         <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
           <p>
             {new Date(data.fetchedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-            {" "}&middot;{" "}Multichain (EVM + Hyperliquid + HyperEVM){" "}&middot;{" "}Trimmed mean (5%)
+            {" "}&middot;{" "}Zerion + Hyperliquid API
             {lastIngestedAt && (
               <>{" "}&middot;{" "}Last ingested {new Date(lastIngestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
             )}
-          </p>
-          <p>
-            Data source: Zerion (DeFi + tokens + NFTs) + Hyperliquid API
-            {data.zerionCoverage.map((c) => (
-              <span key={c.bracket}>
-                {" "}&middot;{" "}{c.bracket}: {c.scanned.toLocaleString()}/{c.total.toLocaleString()} profiles scanned
-              </span>
-            ))}
           </p>
           <details className="mt-3 inline-block text-left">
             <summary className="cursor-pointer hover:text-foreground transition-colors list-none select-none tracking-widest uppercase">

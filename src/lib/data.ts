@@ -63,7 +63,6 @@ export interface DashboardData {
   lastIngestedAt: string | null;
   multiplier: number | null;
   medianMultiplier: number | null;
-  zerionCoverage: { bracket: string; scanned: number; total: number }[];
 }
 
 export const LOW_BRACKET_LABEL = "1200\u20131399";
@@ -308,20 +307,12 @@ export async function getDashboardData(): Promise<DashboardData> {
   );
   const profilesWithHoldings = inBrackets.filter((p) => p.holdingsUSD > 0 && isFinite(p.holdingsUSD)).length;
 
-  // Coverage stats
-  const zerionCoverage = BRACKETS.map((b) => {
-    const total = allProfiles.filter((p) => p.score >= b.min && p.score < b.max).length;
-    const scanned = allProfiles.filter((p) => p.score >= b.min && p.score < b.max && p.scanSource === "zerion").length;
-    return { bracket: b.label, scanned, total };
-  });
-
   return {
     brackets,
     totalUsers: inBrackets.length,
     fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
     lastIngestedAt: null,
-    zerionCoverage,
     multiplier,
     medianMultiplier,
   };
