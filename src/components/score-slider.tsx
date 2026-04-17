@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { ScoreIcon } from "@/components/score-icon";
 
 interface SliderProfile {
   score: number;
@@ -47,7 +48,10 @@ export function ScoreSlider({ profiles }: { profiles: SliderProfile[] }) {
           <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground">
             Score threshold
           </p>
-          <span className="font-mono text-2xl font-bold">{threshold}</span>
+          <span className="font-mono text-2xl font-bold inline-flex items-center gap-2">
+            <ScoreIcon className="w-5 h-[1.3rem] shrink-0" />
+            {threshold}
+          </span>
         </div>
         <input
           type="range"
@@ -66,7 +70,11 @@ export function ScoreSlider({ profiles }: { profiles: SliderProfile[] }) {
 
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
-          <p className="font-mono text-xs text-muted-foreground">Below {threshold}</p>
+          <p className="font-mono text-xs text-muted-foreground inline-flex items-center gap-1 justify-center">
+            Below
+            <ScoreIcon className="w-2.5 h-[0.66rem] shrink-0" />
+            {threshold}
+          </p>
           <p className="font-mono text-lg font-semibold">{stats.belowCount.toLocaleString()}</p>
           <p className="font-mono text-xs text-muted-foreground">
             median {formatUSD(stats.belowMedian)}
@@ -85,7 +93,11 @@ export function ScoreSlider({ profiles }: { profiles: SliderProfile[] }) {
           <p className="font-mono text-xs text-muted-foreground">median gap</p>
         </div>
         <div>
-          <p className="font-mono text-xs text-muted-foreground">Above {threshold}</p>
+          <p className="font-mono text-xs text-muted-foreground inline-flex items-center gap-1 justify-center">
+            Above
+            <ScoreIcon className="w-2.5 h-[0.66rem] shrink-0" />
+            {threshold}
+          </p>
           <p className="font-mono text-lg font-semibold">{stats.aboveCount.toLocaleString()}</p>
           <p className="font-mono text-xs text-muted-foreground">
             median {formatUSD(stats.aboveMedian)}

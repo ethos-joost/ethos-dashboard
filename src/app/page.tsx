@@ -3,6 +3,7 @@ import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, HIGH_BRACKET_LAB
 import { HoldingsChart } from "@/components/chart";
 import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
 import { ScoreSlider } from "@/components/score-slider";
+import { ScoreIcon } from "@/components/score-icon";
 
 function formatUSD(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
@@ -65,8 +66,8 @@ export default async function Home() {
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             <Stat label="Profiles" value={totalUsers.toLocaleString()} />
             <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-            <Stat label={LOW_BRACKET_LABEL} value={low?.userCount.toLocaleString() ?? "0"} />
-            <Stat label={HIGH_BRACKET_LABEL} value={high?.userCount.toLocaleString() ?? "0"} />
+            <Stat label={LOW_BRACKET_LABEL} value={low?.userCount.toLocaleString() ?? "0"} score />
+            <Stat label={HIGH_BRACKET_LABEL} value={high?.userCount.toLocaleString() ?? "0"} score />
           </div>
         </Panel>
         </FadeIn>
@@ -144,7 +145,10 @@ export default async function Home() {
               { bracket: high, label: HIGH_BRACKET_LABEL },
             ].map(({ bracket, label }) => (
               <div key={label}>
-                <p className="font-mono text-sm font-semibold mb-4">{label}</p>
+                <p className="font-mono text-sm font-semibold mb-4 flex items-center gap-1.5">
+                  <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
+                  <span>{label}</span>
+                </p>
                 <div className="space-y-3">
                   <DefiRow
                     label="DeFi active"
@@ -194,7 +198,10 @@ export default async function Home() {
                 { bracket: high, label: HIGH_BRACKET_LABEL },
               ].map(({ bracket, label }) => (
                 <div key={label}>
-                  <p className="font-mono text-sm font-semibold mb-3">{label}</p>
+                  <p className="font-mono text-sm font-semibold mb-3 flex items-center gap-1.5">
+                    <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
+                    <span>{label}</span>
+                  </p>
                   <div className="space-y-2">
                     {bracket.tiers.map((tier) => (
                       <div key={tier.label} className="flex items-center gap-2 md:gap-3">
@@ -298,7 +305,10 @@ function BracketCard({
         <p className={`font-mono text-[10px] tracking-widest uppercase ${highlight ? "text-background/50" : "text-muted-foreground"}`}>
           Score
         </p>
-        <p className="text-2xl font-semibold tracking-tight">{label}</p>
+        <p className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+          <ScoreIcon className="w-5 h-[1.3rem] shrink-0" />
+          <span>{label}</span>
+        </p>
       </div>
 
       <div className="space-y-3">
@@ -334,12 +344,13 @@ function Row({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, score }: { label: string; value: string; score?: boolean }) {
   return (
     <div>
       <p className="font-mono text-xl font-semibold text-foreground">{value}</p>
-      <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground mt-0.5">
-        {label}
+      <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground mt-0.5 flex items-center gap-1">
+        {score && <ScoreIcon className="w-2.5 h-[0.66rem] shrink-0" />}
+        <span>{label}</span>
       </p>
     </div>
   );
