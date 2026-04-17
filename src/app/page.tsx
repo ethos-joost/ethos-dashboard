@@ -2,7 +2,6 @@ import Image from "next/image";
 import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, HIGH_BRACKET_LABEL } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
 import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
-import { ScoreSlider } from "@/components/score-slider";
 import { ScoreIcon } from "@/components/score-icon";
 
 function formatUSD(value: number): string {
@@ -228,17 +227,6 @@ export default async function Home() {
         );
       })()}
 
-      {/* Score Explorer */}
-      <FadeIn>
-        <Panel className="mb-4 md:mb-6">
-          <SectionHeader
-            title="Score Explorer"
-            description="Drag the slider to see how purchasing power changes at different score thresholds"
-          />
-          <ScoreSlider profiles={data.sliderProfiles} />
-        </Panel>
-      </FadeIn>
-
       {/* Footer */}
       <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
         <p>
@@ -256,6 +244,20 @@ export default async function Home() {
             </span>
           ))}
         </p>
+        <details className="mt-3 inline-block text-left">
+          <summary className="cursor-pointer hover:text-foreground transition-colors list-none select-none tracking-widest uppercase">
+            Methodology
+          </summary>
+          <ul className="mt-3 pt-3 border-t border-border/30 space-y-1.5 leading-relaxed max-w-xl mx-auto list-disc pl-4 marker:text-muted-foreground/50">
+            <li>Holdings = wallet tokens + DeFi positions (net of borrowed) + NFT floors + Hyperliquid (perps + spot).</li>
+            <li>Data from Zerion API (tokens, DeFi, NFTs across all major EVM chains including HyperEVM) and Hyperliquid&apos;s public API.</li>
+            <li>Bracket boundaries match Ethos-native credibility tiers.</li>
+            <li>Privy-managed embedded and smart wallets are excluded — these are app-managed, not user-owned assets.</li>
+            <li>Dormant wallets (holdings = $0) are excluded from medians so the metric is meaningful.</li>
+            <li>Medians are the primary indicator; averages use a 5% trimmed mean to reduce whale distortion.</li>
+            <li>One confirmed spam profile with fabricated $7B in fake DeFi deposits was manually zeroed out.</li>
+          </ul>
+        </details>
       </div>
     </div>
   );

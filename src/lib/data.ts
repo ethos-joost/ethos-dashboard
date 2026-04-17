@@ -58,7 +58,6 @@ export interface BracketData {
 export interface DashboardData {
   brackets: BracketData[];
   totalUsers: number;
-  sliderProfiles: { score: number; holdingsUSD: number }[];
   fetchedAt: string;
   profilesWithHoldings: number;
   lastIngestedAt: string | null;
@@ -67,11 +66,11 @@ export interface DashboardData {
   zerionCoverage: { bracket: string; scanned: number; total: number }[];
 }
 
-export const LOW_BRACKET_LABEL = "1200\u20131300";
+export const LOW_BRACKET_LABEL = "1200\u20131399";
 export const HIGH_BRACKET_LABEL = "1600+";
 
 const BRACKETS = [
-  { label: LOW_BRACKET_LABEL, min: 1200, max: 1300 },
+  { label: LOW_BRACKET_LABEL, min: 1200, max: 1400 },
   { label: HIGH_BRACKET_LABEL, min: 1600, max: Infinity },
 ];
 
@@ -316,15 +315,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { bracket: b.label, scanned, total };
   });
 
-  // Lightweight score/holdings pairs for the interactive slider
-  const sliderProfiles = allProfiles
-    .filter((p) => p.score >= 1200 && isFinite(p.holdingsUSD))
-    .map((p) => ({ score: p.score, holdingsUSD: p.holdingsUSD }));
-
   return {
     brackets,
     totalUsers: inBrackets.length,
-    sliderProfiles,
     fetchedAt: new Date().toISOString(),
     profilesWithHoldings,
     lastIngestedAt: null,
