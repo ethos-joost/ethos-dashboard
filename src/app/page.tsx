@@ -28,8 +28,8 @@ export default async function Home() {
         <header className="flex items-center gap-3">
           <Image src="/ethos-logo.svg" alt="Ethos" width={100} height={25} className="shrink-0 w-[72px] h-auto md:w-[100px]" />
           <div className="w-px h-5 bg-border shrink-0" />
-          <span className="text-[10px] md:text-sm font-mono tracking-widest uppercase text-muted-foreground leading-none">
-            Score vs Holdings
+          <span className="text-[10px] md:text-sm font-mono tracking-wide text-muted-foreground leading-none">
+            How Ethos credibility correlates with on-chain assets
           </span>
         </header>
       </Panel>
@@ -63,10 +63,8 @@ export default async function Home() {
             Coverage
           </p>
           <div className="grid grid-cols-2 gap-3 md:gap-4">
-            <Stat label="Profiles" value={totalUsers.toLocaleString()} />
+            <Stat label="Profiles scanned" value={totalUsers.toLocaleString()} />
             <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-            <Stat label={LOW_BRACKET_LABEL} value={low?.userCount.toLocaleString() ?? "0"} score />
-            <Stat label={HIGH_BRACKET_LABEL} value={high?.userCount.toLocaleString() ?? "0"} score />
           </div>
         </Panel>
         </FadeIn>
@@ -80,17 +78,29 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Holdings Comparison (full width) */}
-      {low && high && (
-        <FadeIn><Panel className="mb-4 md:mb-6">
-          <SectionHeader title="Holdings Comparison" />
-          <HoldingsChart brackets={[low, high]} />
-          <Takeaway>
-            The typical {HIGH_BRACKET_LABEL} user holds ${formatUSD(high.medianHoldings)} compared to ${formatUSD(low.medianHoldings)} for {LOW_BRACKET_LABEL} users.
-            At the average, the gap is ${formatUSD(high.trimmedAvgHoldings)} vs ${formatUSD(low.trimmedAvgHoldings)}.
-          </Takeaway>
-        </Panel></FadeIn>
-      )}
+      {/* Holdings Distribution (full width) */}
+      {low && high && (() => {
+        const over10K = ["$10K–100K", "$100K–1M", "$1M+"];
+        const lowPctUnder100 = low.tiers.find((t) => t.label === "$0\u2013100")?.pct ?? 0;
+        const highPctOver10K = high.tiers
+          .filter((t) => over10K.includes(t.label))
+          .reduce((s, t) => s + t.pct, 0);
+
+        return (
+          <FadeIn><Panel className="mb-4 md:mb-6">
+            <SectionHeader
+              title="Holdings Distribution"
+              description="Share of each bracket's users in every holdings range"
+            />
+            <HoldingsChart brackets={[low, high]} />
+            <Takeaway>
+              {lowPctUnder100.toFixed(0)}% of {LOW_BRACKET_LABEL} users hold less than $100,
+              while {highPctOver10K.toFixed(0)}% of {HIGH_BRACKET_LABEL} users hold over $10K.
+              The shape of wealth is fundamentally different between the two brackets.
+            </Takeaway>
+          </Panel></FadeIn>
+        );
+      })()}
 
       {/* Market Power */}
       {low && high && (() => {
@@ -150,22 +160,22 @@ export default async function Home() {
                 </p>
                 <div className="space-y-3">
                   <DefiRow
-                    label="DeFi active"
+                    label="DeFi participation"
                     value={`${bracket.defiActivePct}%`}
-                    sublabel={`${bracket.defiActiveCount.toLocaleString()} users`}
+                    sublabel={`${bracket.defiActiveCount.toLocaleString()} users active`}
                   />
                   <DefiRow
-                    label="Median in DeFi"
+                    label="Median among DeFi users"
                     value={`$${formatUSD(bracket.medianDefiHoldings)}`}
                     sublabel={`$${formatUSD(bracket.totalDefi)} total deposited`}
                   />
                   <DefiRow
-                    label="Median in NFTs"
+                    label="Median among NFT holders"
                     value={`$${formatUSD(bracket.medianNftHoldings)}`}
-                    sublabel={`$${formatUSD(bracket.totalNfts)} total`}
+                    sublabel={`$${formatUSD(bracket.totalNfts)} total floor value`}
                   />
                   <DefiRow
-                    label="Median in Hyperliquid"
+                    label="Median among Hyperliquid users"
                     value={`$${formatUSD(bracket.medianHlHoldings)}`}
                     sublabel={`$${formatUSD(bracket.totalHl)} total`}
                   />
@@ -227,6 +237,31 @@ export default async function Home() {
         );
       })()}
 
+      {/* Top Holders */}
+      {high && high.topHolders.length > 0 && (
+        <FadeIn><Panel className="mb-4 md:mb-6">
+          <SectionHeader
+            title={`Biggest ${HIGH_BRACKET_LABEL} holders`}
+            description="The ten largest wallets in the high-credibility bracket"
+          />
+          <div className="space-y-1">
+            {high.topHolders.slice(0, 10).map((h, i) => (
+              <div key={`${h.displayName}-${i}`} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono text-[10px] text-muted-foreground w-5 shrink-0 tabular-nums">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="font-mono text-sm truncate">{h.displayName}</span>
+                </div>
+                <span className="font-mono text-sm font-semibold shrink-0 tabular-nums">
+                  ${formatUSD(h.holdingsUSD)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Panel></FadeIn>
+      )}
+
       {/* Footer */}
       <Panel>
         <div className="font-mono text-[10px] tracking-wide text-muted-foreground text-center space-y-1">
@@ -247,7 +282,7 @@ export default async function Home() {
               <li>Bracket boundaries match Ethos-native credibility tiers.</li>
               <li>Privy-managed embedded and smart wallets are excluded — these are app-managed, not user-owned assets.</li>
               <li>Dormant wallets (holdings = $0) are excluded from medians so the metric is meaningful.</li>
-              <li>Medians are the primary indicator; averages use a 5% trimmed mean to reduce whale distortion.</li>
+              <li>Medians are the primary indicator since wealth distributions are heavily skewed by whales; averages are shown for context.</li>
               <li>One confirmed spam profile with fabricated $7B in fake DeFi deposits was manually zeroed out.</li>
             </ul>
           </details>
@@ -311,7 +346,7 @@ function BracketCard({
         <Row label="Users" value={bracket.userCount.toLocaleString()} muted={highlight} />
         <div className={`border-t ${highlight ? "border-background/10" : "border-border/50"}`} />
         <Row label="Median" value={`$${formatUSD(bracket.medianHoldings)}`} muted={highlight} large />
-        <Row label="Avg" value={`$${formatUSD(bracket.trimmedAvgHoldings)}`} muted={highlight} />
+        <Row label="Avg" value={`$${formatUSD(bracket.avgHoldings)}`} muted={highlight} />
       </div>
     </div>
   );

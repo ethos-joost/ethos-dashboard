@@ -30,13 +30,11 @@ export interface BracketData {
   label: string;
   userCount: number;
   avgHoldings: number;
-  trimmedAvgHoldings: number;
   medianHoldings: number;
   totalHoldings: number;
   percentiles: { p10: number; p25: number; p50: number; p75: number; p90: number };
   tiers: { label: string; count: number; pct: number }[];
   topHolders: { displayName: string; holdingsUSD: number }[];
-  distribution: { bin: string; count: number }[];
   // Engagement metrics from Ethos DB
   humanVerifiedCount: number;
   humanVerifiedPct: number;
@@ -80,18 +78,6 @@ const TIERS = [
   { label: "$10K–100K", min: 10_000, max: 100_000 },
   { label: "$100K–1M", min: 100_000, max: 1_000_000 },
   { label: "$1M+", min: 1_000_000, max: Infinity },
-];
-
-const DIST_BINS = [
-  { label: "$0–10", min: 0, max: 10 },
-  { label: "$10–50", min: 10, max: 50 },
-  { label: "$50–100", min: 50, max: 100 },
-  { label: "$100–500", min: 100, max: 500 },
-  { label: "$500–1K", min: 500, max: 1_000 },
-  { label: "$1K–5K", min: 1_000, max: 5_000 },
-  { label: "$5K–10K", min: 5_000, max: 10_000 },
-  { label: "$10K–50K", min: 10_000, max: 50_000 },
-  { label: "$50K+", min: 50_000, max: Infinity },
 ];
 
 function percentile(sorted: number[], p: number): number {
@@ -185,16 +171,6 @@ export async function getDashboardData(): Promise<DashboardData> {
       cappedTotal = sorted.slice(0, sorted.length - trimTop).reduce((s, v) => s + v, 0);
     }
 
-    // Trimmed mean
-    let trimmedAvg = avg;
-    let trimmedTotal = total;
-    if (sorted.length >= 20) {
-      const trimCount = Math.floor(sorted.length * 0.05);
-      const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
-      trimmedTotal = trimmed.reduce((sum, v) => sum + v, 0);
-      trimmedAvg = trimmedTotal / trimmed.length;
-    }
-
     // Percentiles
     const percentiles = {
       p10: Math.round(percentile(sorted, 0.1) * 100) / 100,
@@ -214,14 +190,6 @@ export async function getDashboardData(): Promise<DashboardData> {
         count,
         pct: values.length > 0 ? Math.round((count / values.length) * 1000) / 10 : 0,
       };
-    });
-
-    // Distribution bins
-    const distribution = DIST_BINS.map((bin) => {
-      const count = values.filter((v) =>
-        bin.max === Infinity ? v >= bin.min : v >= bin.min && v < bin.max
-      ).length;
-      return { bin: bin.label, count };
     });
 
     // Top holders
@@ -254,13 +222,11 @@ export async function getDashboardData(): Promise<DashboardData> {
       label: bracket.label,
       userCount: values.length,
       avgHoldings: Math.round(avg * 100) / 100,
-      trimmedAvgHoldings: Math.round(trimmedAvg * 100) / 100,
       medianHoldings: Math.round(median * 100) / 100,
       totalHoldings: Math.round(cappedTotal * 100) / 100,
       percentiles,
       tiers,
       topHolders,
-      distribution,
       humanVerifiedCount,
       humanVerifiedPct,
       vouchGivenEthTotal: Math.round(vouchGivenEthTotal * 100) / 100,
@@ -293,8 +259,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   const high = brackets.find((b) => b.label === HIGH_BRACKET_LABEL);
   const low = brackets.find((b) => b.label === LOW_BRACKET_LABEL);
   let multiplier: number | null = null;
-  if (high && low && low.trimmedAvgHoldings > 0 && high.trimmedAvgHoldings > 0) {
-    multiplier = Math.round((high.trimmedAvgHoldings / low.trimmedAvgHoldings) * 10) / 10;
+  if (high && low && low.avgHoldings > 0 && high.avgHoldings > 0) {
+    multiplier = Math.round((high.avgHoldings / low.avgHoldings) * 10) / 10;
   }
 
   let medianMultiplier: number | null = null;
