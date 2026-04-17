@@ -2,7 +2,7 @@ import Image from "next/image";
 import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, HIGH_BRACKET_LABEL } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
 import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
-import { ScoreIcon } from "@/components/score-icon";
+import { ScoreIcon, Score } from "@/components/score-icon";
 
 function formatUSD(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
@@ -45,12 +45,12 @@ export default async function Home() {
               </p>
               <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
                 The typical user with a score{" "}
-                <span className="font-semibold">higher than 1600</span> has{" "}
+                <span className="font-semibold">higher than <Score>1600</Score></span> has{" "}
                 <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">
                   <CountUp value={medianMultiplier} decimals={1} suffix="x" />
                 </span>{" "}
                 the purchasing power of a user with a score{" "}
-                <span className="font-semibold">between {LOW_BRACKET_LABEL}</span>
+                <span className="font-semibold">between <Score>{LOW_BRACKET_LABEL}</Score></span>
               </p>
             </Panel>
           </FadeIn>

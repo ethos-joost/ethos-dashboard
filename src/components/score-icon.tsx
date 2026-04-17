@@ -15,3 +15,20 @@ export function ScoreIcon({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+
+// Inline wrapper: pairs a score value with the icon at the right size for
+// surrounding text. Use for any score display — headings, labels, and prose.
+export function Score({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span className={`inline-flex items-center gap-[0.2em] whitespace-nowrap ${className}`}>
+      <ScoreIcon className="w-[0.8em] h-[0.84em] shrink-0" />
+      <span>{children}</span>
+    </span>
+  );
+}
