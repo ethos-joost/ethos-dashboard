@@ -124,10 +124,14 @@ async function getWalletTotal(address) {
   // Use Zerion's own total which handles netting
   const total = attr.total?.positions ?? 0;
 
+  // Net DeFi equity: what the user actually has at work in DeFi,
+  // after subtracting anything they've borrowed against their collateral.
+  const defiNet = Math.max(0, deposited + staked + locked + reward + investment - Math.abs(borrowed));
+
   return {
     total,
     wallet,
-    defi: deposited + staked + locked + reward + investment,
+    defi: defiNet,
     borrowed: Math.abs(borrowed),
     chains,
   };
