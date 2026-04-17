@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ScoreIcon } from "@/components/score-icon";
+import { median } from "@/lib/math";
 
 interface SliderProfile {
   score: number;
@@ -15,12 +16,6 @@ export function ScoreSlider({ profiles }: { profiles: SliderProfile[] }) {
   const stats = useMemo(() => {
     const above = profiles.filter((p) => p.score >= threshold && p.holdingsUSD > 0);
     const below = profiles.filter((p) => p.score < threshold && p.score >= 1200 && p.holdingsUSD > 0);
-
-    function median(arr: number[]) {
-      if (arr.length === 0) return 0;
-      const sorted = [...arr].sort((a, b) => a - b);
-      return sorted[Math.floor(sorted.length / 2)];
-    }
 
     const aboveMedian = median(above.map((p) => p.holdingsUSD));
     const belowMedian = median(below.map((p) => p.holdingsUSD));

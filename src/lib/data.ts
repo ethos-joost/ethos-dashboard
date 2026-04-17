@@ -10,7 +10,6 @@ export interface StoredProfile {
   holdingsDefi?: number;
   holdingsNfts?: number;
   holdingsHyperliquid?: number;
-  holdingsHyperEvm?: number;
   scanSource?: string;
   updatedAt: string;
   // Enrichment from Ethos Postgres (optional for backwards compat)
@@ -113,8 +112,15 @@ async function fetchProfiles(): Promise<StoredProfile[]> {
     max: 2,
   });
 
-  const { rows } = await pool.query("SELECT * FROM profiles ORDER BY score DESC");
-  await pool.end();
+  let rows: pg.QueryResultRow[];
+  try {
+    ({ rows } = await pool.query("SELECT * FROM profiles ORDER BY score DESC"));
+  } catch (err) {
+    console.error("[data] Supabase query failed:", err);
+    throw err;
+  } finally {
+    await pool.end();
+  }
 
   return rows.map((r) => ({
     profileId: r.profile_id,
@@ -126,7 +132,6 @@ async function fetchProfiles(): Promise<StoredProfile[]> {
     holdingsDefi: parseFloat(r.holdings_defi ?? "0"),
     holdingsNfts: parseFloat(r.holdings_nfts),
     holdingsHyperliquid: parseFloat(r.holdings_hyperliquid),
-    holdingsHyperEvm: parseFloat(r.holdings_hyperevm ?? "0"),
     scanSource: r.scan_source,
     vouchGivenEth: parseFloat(r.vouch_given_eth ?? "0"),
     vouchGivenCount: r.vouch_given_count,

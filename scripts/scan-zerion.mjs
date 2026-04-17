@@ -54,7 +54,8 @@ async function fetchJson(url) {
     process.exit(0);
   }
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 20000);
@@ -76,16 +77,26 @@ async function fetchJson(url) {
         continue;
       }
       if (!res.ok) {
-        if (res.status >= 500 && attempt < 2) { await delay(2000); continue; }
+        if (res.status >= 500 && attempt < MAX_ATTEMPTS - 1) {
+          await delay(backoffDelay(attempt));
+          continue;
+        }
         return null;
       }
       return await res.json();
     } catch {
-      if (attempt === 2) return null;
-      await delay(2000);
+      if (attempt === MAX_ATTEMPTS - 1) return null;
+      await delay(backoffDelay(attempt));
     }
   }
   return null;
+}
+
+// Exponential backoff with jitter: 1s, 2s, 4s, 8s (capped at 16s) ±25%
+function backoffDelay(attempt) {
+  const base = Math.min(1000 * 2 ** attempt, 16000);
+  const jitter = base * 0.25 * (Math.random() * 2 - 1);
+  return Math.round(base + jitter);
 }
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -209,14 +220,13 @@ async function main() {
           nftTotal += nfts;
         }
 
-        // Preserve existing HL + HEVM data
+        // Preserve existing Hyperliquid data (HyperEVM is covered by Zerion's evmTotal)
         const hl = profile.holdingsHyperliquid ?? 0;
-        const hevm = profile.holdingsHyperEvm ?? 0;
 
         profile.holdingsEvm = Math.round(evmTotal * 100) / 100;
         profile.holdingsDefi = Math.round(defiTotal * 100) / 100;
         profile.holdingsNfts = Math.round(nftTotal * 100) / 100;
-        profile.holdingsUSD = Math.round((evmTotal + nftTotal + hl + hevm) * 100) / 100;
+        profile.holdingsUSD = Math.round((evmTotal + nftTotal + hl) * 100) / 100;
         profile.scanSource = "zerion";
 
         // Queue Supabase backup (non-blocking)
@@ -270,17 +280,17 @@ async function upsertToSupabase(p) {
       `INSERT INTO profiles (
          profile_id, score, display_name, addresses,
          holdings_usd, holdings_evm, holdings_defi, holdings_nfts,
-         holdings_hyperliquid, holdings_hyperevm, scan_source,
+         holdings_hyperliquid, scan_source,
          vouch_given_eth, vouch_given_count, vouch_received_eth, vouch_received_count,
          reviews_positive, reviews_neutral, reviews_negative,
          human_verified, xp_total, influence_factor, influence_factor_percentile,
          updated_at
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,NOW())
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,NOW())
        ON CONFLICT (profile_id) DO UPDATE SET
          score = EXCLUDED.score, display_name = EXCLUDED.display_name, addresses = EXCLUDED.addresses,
          holdings_usd = EXCLUDED.holdings_usd, holdings_evm = EXCLUDED.holdings_evm,
          holdings_defi = EXCLUDED.holdings_defi, holdings_nfts = EXCLUDED.holdings_nfts,
-         holdings_hyperliquid = EXCLUDED.holdings_hyperliquid, holdings_hyperevm = EXCLUDED.holdings_hyperevm,
+         holdings_hyperliquid = EXCLUDED.holdings_hyperliquid,
          scan_source = EXCLUDED.scan_source,
          vouch_given_eth = EXCLUDED.vouch_given_eth, vouch_given_count = EXCLUDED.vouch_given_count,
          vouch_received_eth = EXCLUDED.vouch_received_eth, vouch_received_count = EXCLUDED.vouch_received_count,
@@ -291,7 +301,7 @@ async function upsertToSupabase(p) {
       [
         p.profileId, p.score, p.displayName, p.addresses,
         p.holdingsUSD, p.holdingsEvm ?? 0, p.holdingsDefi ?? 0, p.holdingsNfts ?? 0,
-        p.holdingsHyperliquid ?? 0, p.holdingsHyperEvm ?? 0, p.scanSource ?? "zerion",
+        p.holdingsHyperliquid ?? 0, p.scanSource ?? "zerion",
         p.vouchGivenEth ?? 0, p.vouchGivenCount ?? 0, p.vouchReceivedEth ?? 0, p.vouchReceivedCount ?? 0,
         p.reviewsPositive ?? 0, p.reviewsNeutral ?? 0, p.reviewsNegative ?? 0,
         p.humanVerified ?? false, p.xpTotal ?? 0, p.influenceFactor ?? 0, p.influenceFactorPercentile ?? 0,
