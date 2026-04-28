@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "serve": "deno run -A server.ts",
     "lint": "eslint",
     "ingest": "node scripts/ingest.mjs",
     "enrich": "node scripts/enrich.mjs",
