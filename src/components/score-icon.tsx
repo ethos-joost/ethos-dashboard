@@ -27,8 +27,8 @@ export function Score({
 }) {
   return (
     <span className={`inline-flex items-center gap-[0.2em] whitespace-nowrap ${className}`}>
-      <ScoreIcon className="w-[0.8em] h-[0.84em] shrink-0" />
       <span>{children}</span>
+      <ScoreIcon className="w-[0.8em] h-[0.84em] shrink-0" />
     </span>
   );
 }

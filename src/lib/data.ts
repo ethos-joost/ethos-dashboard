@@ -34,7 +34,6 @@ export interface BracketData {
   totalHoldings: number;
   percentiles: { p10: number; p25: number; p50: number; p75: number; p90: number };
   tiers: { label: string; count: number; pct: number }[];
-  topHolders: { displayName: string; holdingsUSD: number }[];
   // Engagement metrics from Ethos DB
   humanVerifiedCount: number;
   humanVerifiedPct: number;
@@ -191,16 +190,6 @@ export async function getDashboardData(): Promise<DashboardData> {
       };
     });
 
-    // Top holders
-    const topHolders = [...profiles]
-      .filter((p) => isFinite(p.holdingsUSD) && !isNaN(p.holdingsUSD))
-      .sort((a, b) => b.holdingsUSD - a.holdingsUSD)
-      .slice(0, 10)
-      .map((p) => ({
-        displayName: p.displayName || `Profile #${p.profileId}`,
-        holdingsUSD: Math.round(p.holdingsUSD * 100) / 100,
-      }));
-
     // Engagement metrics
     const humanVerifiedCount = profiles.filter((p) => p.humanVerified).length;
     const humanVerifiedPct = profiles.length > 0
@@ -225,7 +214,6 @@ export async function getDashboardData(): Promise<DashboardData> {
       totalHoldings: Math.round(cappedTotal * 100) / 100,
       percentiles,
       tiers,
-      topHolders,
       humanVerifiedCount,
       humanVerifiedPct,
       vouchGivenEthTotal: Math.round(vouchGivenEthTotal * 100) / 100,

@@ -155,8 +155,8 @@ export default async function Home() {
             ].map(({ bracket, label }) => (
               <div key={label}>
                 <p className="font-mono text-sm font-semibold mb-4 flex items-center gap-1.5">
-                  <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
                   <span>{label}</span>
+                  <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
                 </p>
                 <div className="space-y-3">
                   <DefiRow
@@ -208,8 +208,8 @@ export default async function Home() {
               ].map(({ bracket, label }) => (
                 <div key={label}>
                   <p className="font-mono text-sm font-semibold mb-3 flex items-center gap-1.5">
-                    <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
                     <span>{label}</span>
+                    <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
                   </p>
                   <div className="space-y-2">
                     {bracket.tiers.map((tier) => (
@@ -236,31 +236,6 @@ export default async function Home() {
           </Panel></FadeIn>
         );
       })()}
-
-      {/* Top Holders */}
-      {high && high.topHolders.length > 0 && (
-        <FadeIn><Panel className="mb-4 md:mb-6">
-          <SectionHeader
-            title={`Biggest ${HIGH_BRACKET_LABEL} holders`}
-            description="The ten largest wallets in the high-credibility bracket"
-          />
-          <div className="space-y-1">
-            {high.topHolders.slice(0, 10).map((h, i) => (
-              <div key={`${h.displayName}-${i}`} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="font-mono text-[10px] text-muted-foreground w-5 shrink-0 tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="font-mono text-sm truncate">{h.displayName}</span>
-                </div>
-                <span className="font-mono text-sm font-semibold shrink-0 tabular-nums">
-                  ${formatUSD(h.holdingsUSD)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Panel></FadeIn>
-      )}
 
       {/* Footer */}
       <Panel>
@@ -338,8 +313,8 @@ function BracketCard({
           Score
         </p>
         <p className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-          <ScoreIcon className="w-5 h-[1.3rem] shrink-0" />
           <span>{label}</span>
+          <ScoreIcon className="w-5 h-[1.3rem] shrink-0" />
         </p>
       </div>
 
@@ -381,8 +356,8 @@ function Stat({ label, value, score }: { label: string; value: string; score?: b
     <div>
       <p className="font-mono text-xl font-semibold text-foreground">{value}</p>
       <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground mt-0.5 flex items-center gap-1">
-        {score && <ScoreIcon className="w-2.5 h-[0.66rem] shrink-0" />}
         <span>{label}</span>
+        {score && <ScoreIcon className="w-2.5 h-[0.66rem] shrink-0" />}
       </p>
     </div>
   );
