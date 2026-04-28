@@ -6,7 +6,7 @@ const Dither = dynamic(() => import("./dither"), { ssr: false });
 
 export function DitherBackground() {
   return (
-    <div className="fixed inset-0 -z-10" style={{ filter: "invert(1)" }}>
+    <div className="fixed inset-0 -z-10 hidden md:block" style={{ filter: "invert(1)" }}>
       <Dither
         waveColor={[0.5, 0.5, 0.5]}
         disableAnimation={false}
