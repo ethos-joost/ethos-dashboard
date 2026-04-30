@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, HIGH_BRACKET_LABEL } from "@/lib/data";
+import { getDashboardData, type BracketData, LOW_BRACKET_LABEL, MID_BRACKET_LABEL, HIGH_BRACKET_LABEL } from "@/lib/data";
 import { HoldingsChart } from "@/components/chart";
 import { FadeIn, CountUp, AnimatedBar } from "@/components/animations";
 import { ScoreIcon, Score } from "@/components/score-icon";
@@ -19,7 +19,15 @@ export default async function Home() {
   const { brackets, totalUsers, medianMultiplier, profilesWithHoldings, lastScannedAt } = data;
 
   const low = brackets.find((b) => b.label === LOW_BRACKET_LABEL);
+  const mid = brackets.find((b) => b.label === MID_BRACKET_LABEL);
   const high = brackets.find((b) => b.label === HIGH_BRACKET_LABEL);
+
+  const combinedAssets = brackets.reduce((s, b) => s + b.totalHoldings, 0);
+  const highValueTiers = ["$10K–100K", "$100K–1M", "$1M+"];
+  const walletsOver10K = brackets.reduce(
+    (s, b) => s + b.tiers.filter((t) => highValueTiers.includes(t.label)).reduce((ss, t) => ss + t.count, 0),
+    0,
+  );
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-10">
@@ -57,29 +65,32 @@ export default async function Home() {
         )}
 
         {/* Stats takes 1/3 */}
-        <FadeIn delay={0.2} className="lg:col-span-1">
-        <Panel>
+        <FadeIn delay={0.2} className="lg:col-span-1 h-full">
+        <Panel className="h-full">
           <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4 md:mb-5">
             Coverage
           </p>
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-x-4 md:gap-y-6">
             <Stat label="Profiles scanned" value={totalUsers.toLocaleString()} />
             <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
+            <Stat label="Assets analyzed" value={`$${formatUSD(combinedAssets)}`} />
+            <Stat label="Wallets over $10K" value={walletsOver10K.toLocaleString()} />
           </div>
         </Panel>
         </FadeIn>
       </div>
 
       {/* Bracket cards: side-by-side */}
-      {low && high && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-          <FadeIn><BracketCard bracket={low} label={LOW_BRACKET_LABEL} /></FadeIn>
-          <FadeIn delay={0.15}><BracketCard bracket={high} label={HIGH_BRACKET_LABEL} highlight /></FadeIn>
+      {low && mid && high && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+          <FadeIn><BracketCard bracket={low} label={LOW_BRACKET_LABEL} tierName="Neutral" /></FadeIn>
+          <FadeIn delay={0.1}><BracketCard bracket={mid} label={MID_BRACKET_LABEL} tierName="Known" /></FadeIn>
+          <FadeIn delay={0.2}><BracketCard bracket={high} label={HIGH_BRACKET_LABEL} tierName="Established +" highlight /></FadeIn>
         </div>
       )}
 
       {/* Holdings Distribution (full width) */}
-      {low && high && (() => {
+      {low && mid && high && (() => {
         const over10K = ["$10K–100K", "$100K–1M", "$1M+"];
         const lowPctUnder100 = low.tiers.find((t) => t.label === "$0\u2013100")?.pct ?? 0;
         const highPctOver10K = high.tiers
@@ -92,65 +103,70 @@ export default async function Home() {
               title="Holdings Distribution"
               description="Share of each bracket's users in every holdings range"
             />
-            <HoldingsChart brackets={[low, high]} />
+            <HoldingsChart brackets={[low, mid, high]} />
             <Takeaway>
               {lowPctUnder100.toFixed(0)}% of {LOW_BRACKET_LABEL} users hold less than $100,
               while {highPctOver10K.toFixed(0)}% of {HIGH_BRACKET_LABEL} users hold over $10K.
-              The shape of wealth is fundamentally different between the two brackets.
+              The shape of wealth shifts cleanly across all three tiers.
             </Takeaway>
           </Panel></FadeIn>
         );
       })()}
 
       {/* Market Power */}
-      {low && high && (() => {
+      {low && mid && high && (() => {
         const above10K = ["$10K–100K", "$100K–1M", "$1M+"];
         const above1K = ["$1K–10K", ...above10K];
-        const highOver10K = high.tiers.filter((t) => above10K.includes(t.label)).reduce((s, t) => s + t.count, 0);
-        const highOver1K = high.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0);
-        const lowOver10K = low.tiers.filter((t) => above10K.includes(t.label)).reduce((s, t) => s + t.count, 0);
-        const lowOver1K = low.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0);
+        const tierStats = (b: BracketData) => ({
+          over10K: b.tiers.filter((t) => above10K.includes(t.label)).reduce((s, t) => s + t.count, 0),
+          over1K: b.tiers.filter((t) => above1K.includes(t.label)).reduce((s, t) => s + t.count, 0),
+        });
+        const lowS = tierStats(low);
+        const highS = tierStats(high);
 
         return (
           <FadeIn><Panel className="mb-4 md:mb-6">
-            <SectionHeader title="Market Power" description="Combined holdings and high-value user counts per bracket" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <BigStat
-                value={`$${formatUSD(high.totalHoldings)}`}
-                label={`${HIGH_BRACKET_LABEL} combined`}
-                sublabel={`${high.userCount.toLocaleString()} users`}
-              />
-              <BigStat
-                value={`$${formatUSD(low.totalHoldings)}`}
-                label={`${LOW_BRACKET_LABEL} combined`}
-                sublabel={`${low.userCount.toLocaleString()} users`}
-              />
-              <BigStat
-                value={highOver1K.toLocaleString()}
-                label={`${HIGH_BRACKET_LABEL} users over $1K`}
-                sublabel={`${highOver10K.toLocaleString()} hold over $10K`}
-              />
-              <BigStat
-                value={lowOver1K.toLocaleString()}
-                label={`${LOW_BRACKET_LABEL} users over $1K`}
-                sublabel={`${lowOver10K.toLocaleString()} hold over $10K`}
-              />
+            <SectionHeader title="Market Power" description="Combined holdings and high-value user counts per tier" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-6">
+              {[
+                { bracket: low, label: LOW_BRACKET_LABEL, stats: lowS },
+                { bracket: mid, label: MID_BRACKET_LABEL, stats: tierStats(mid) },
+                { bracket: high, label: HIGH_BRACKET_LABEL, stats: highS },
+              ].map(({ bracket, label, stats }) => (
+                <div key={label} className="space-y-4">
+                  <p className="font-mono text-sm font-semibold flex items-center gap-1.5">
+                    <span>{label}</span>
+                    <ScoreIcon className="w-3 h-[0.8rem] shrink-0" />
+                  </p>
+                  <BigStat
+                    value={`$${formatUSD(bracket.totalHoldings)}`}
+                    label="Combined holdings"
+                    sublabel={`${bracket.userCount.toLocaleString()} users`}
+                  />
+                  <BigStat
+                    value={stats.over1K.toLocaleString()}
+                    label="Users over $1K"
+                    sublabel={`${stats.over10K.toLocaleString()} hold over $10K`}
+                  />
+                </div>
+              ))}
             </div>
             <Takeaway>
               Despite being {Math.round(low.userCount / high.userCount)}× smaller, the {HIGH_BRACKET_LABEL} bracket holds ${formatUSD(high.totalHoldings)} combined.
-              {" "}{highOver1K.toLocaleString()} of them hold over $1K, including {highOver10K.toLocaleString()} with over $10K.
+              {" "}{highS.over1K.toLocaleString()} of them hold over $1K, including {highS.over10K.toLocaleString()} with over $10K.
             </Takeaway>
           </Panel></FadeIn>
         );
       })()}
 
       {/* DeFi Participation */}
-      {low && high && (
+      {low && mid && high && (
         <FadeIn><Panel className="mb-4 md:mb-6">
           <SectionHeader title="Capital Deployment" description="How users deploy their assets across DeFi, NFTs, and Hyperliquid" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {[
               { bracket: low, label: LOW_BRACKET_LABEL },
+              { bracket: mid, label: MID_BRACKET_LABEL },
               { bracket: high, label: HIGH_BRACKET_LABEL },
             ].map(({ bracket, label }) => (
               <div key={label}>
@@ -193,7 +209,7 @@ export default async function Home() {
       )}
 
       {/* Holdings Tiers (full width) */}
-      {low && high && (() => {
+      {low && mid && high && (() => {
         const above100 = ["$100–1K", "$1K–10K", "$10K–100K", "$100K–1M", "$1M+"];
         const highOver100 = high.tiers.filter((t) => above100.includes(t.label)).reduce((s, t) => s + t.pct, 0);
         const lowOver100 = low.tiers.filter((t) => above100.includes(t.label)).reduce((s, t) => s + t.pct, 0);
@@ -201,9 +217,10 @@ export default async function Home() {
         return (
           <FadeIn><Panel className="mb-4 md:mb-6">
             <SectionHeader title="Holdings Tiers" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {[
                 { bracket: low, label: LOW_BRACKET_LABEL },
+                { bracket: mid, label: MID_BRACKET_LABEL },
                 { bracket: high, label: HIGH_BRACKET_LABEL },
               ].map(({ bracket, label }) => (
                 <div key={label}>
@@ -292,10 +309,12 @@ function SectionHeader({ title, description }: { title: string; description?: st
 function BracketCard({
   bracket,
   label,
+  tierName,
   highlight,
 }: {
   bracket: BracketData;
   label: string;
+  tierName: string;
   highlight?: boolean;
 }) {
   return (
@@ -315,6 +334,9 @@ function BracketCard({
         <p className="text-2xl font-semibold tracking-tight flex items-center gap-2">
           <span>{label}</span>
           <ScoreIcon className="w-5 h-[1.3rem] shrink-0" />
+        </p>
+        <p className={`text-base font-normal mt-1 ${highlight ? "text-background/60" : "text-muted-foreground"}`}>
+          {tierName}
         </p>
       </div>
 

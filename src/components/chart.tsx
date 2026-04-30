@@ -24,11 +24,11 @@ export function HoldingsChart({ brackets }: { brackets: BracketData[] }) {
     return row;
   });
 
-  const colors = ["hsl(0 0% 72%)", "hsl(0 0% 9%)"];
+  const colors = ["hsl(0 0% 78%)", "hsl(0 0% 45%)", "hsl(0 0% 9%)"];
 
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={bins} barGap={4} barSize={18} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+      <BarChart data={bins} barGap={3} barSize={14} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
         <CartesianGrid
           strokeDasharray="3 3"
           stroke="hsl(0 0% 89.8%)"

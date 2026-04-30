@@ -62,10 +62,12 @@ export interface DashboardData {
 }
 
 export const LOW_BRACKET_LABEL = "1200\u20131399";
+export const MID_BRACKET_LABEL = "1400\u20131599";
 export const HIGH_BRACKET_LABEL = "1600+";
 
 const BRACKETS = [
   { label: LOW_BRACKET_LABEL, min: 1200, max: 1400 },
+  { label: MID_BRACKET_LABEL, min: 1400, max: 1600 },
   { label: HIGH_BRACKET_LABEL, min: 1600, max: Infinity },
 ];
 
