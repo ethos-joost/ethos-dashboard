@@ -53,7 +53,7 @@ export default async function Home() {
             <p className="text-sm md:text-base text-foreground/80 leading-relaxed max-w-3xl">
               In web3, marketing dollars get burned reaching users who never had the capital to convert.
               Filtering by Ethos credibility lets teams stop inflating CAC on noise and reach buyers with
-              actual purchasing power — and because every score is tied to a real X account and wallet,
+              actual purchasing power. And because every score is tied to a real X account and wallet,
               those qualified leads aren&apos;t just a stat on a chart, they&apos;re directly reachable.
             </p>
           </Panel>
@@ -98,9 +98,9 @@ export default async function Home() {
       {/* Bracket cards: side-by-side */}
       {low && mid && high && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-          <FadeIn><BracketCard bracket={low} label={LOW_BRACKET_LABEL} tierName="Neutral" /></FadeIn>
-          <FadeIn delay={0.1}><BracketCard bracket={mid} label={MID_BRACKET_LABEL} tierName="Known" /></FadeIn>
-          <FadeIn delay={0.2}><BracketCard bracket={high} label={HIGH_BRACKET_LABEL} tierName="Established +" highlight /></FadeIn>
+          <FadeIn><BracketCard bracket={low} label={LOW_BRACKET_LABEL} tierName="Neutral" totalUsers={totalUsers} /></FadeIn>
+          <FadeIn delay={0.1}><BracketCard bracket={mid} label={MID_BRACKET_LABEL} tierName="Known" totalUsers={totalUsers} /></FadeIn>
+          <FadeIn delay={0.2}><BracketCard bracket={high} label={HIGH_BRACKET_LABEL} tierName="Established +" totalUsers={totalUsers} highlight /></FadeIn>
         </div>
       )}
 
@@ -159,16 +159,26 @@ export default async function Home() {
                     sublabel={`${bracket.userCount.toLocaleString()} users`}
                   />
                   <BigStat
-                    value={stats.over1K.toLocaleString()}
-                    label="Users over $1K"
-                    sublabel={`${stats.over10K.toLocaleString()} hold over $10K`}
+                    value={`${bracket.userCount > 0 ? Math.round((stats.over1K / bracket.userCount) * 100) : 0}%`}
+                    label="Hold over $1K"
+                    sublabel={`${bracket.userCount > 0 ? Math.round((stats.over10K / bracket.userCount) * 100) : 0}% hold over $10K (${stats.over10K.toLocaleString()} users)`}
                   />
                 </div>
               ))}
             </div>
             <Takeaway>
-              Despite being {Math.round(low.userCount / high.userCount)}× smaller, the {HIGH_BRACKET_LABEL} bracket holds ${formatUSD(high.totalHoldings)} combined.
-              {" "}{highS.over1K.toLocaleString()} of them hold over $1K, including {highS.over10K.toLocaleString()} with over $10K.
+              {(() => {
+                const highPct = high.userCount > 0 ? Math.round((highS.over1K / high.userCount) * 100) : 0;
+                const lowPct = low.userCount > 0 ? Math.round((lowS.over1K / low.userCount) * 100) : 0;
+                const sizeRatio = Math.round(low.userCount / high.userCount);
+                const conversionRatio = lowPct > 0 ? (highPct / lowPct).toFixed(1) : "—";
+                return (
+                  <>
+                    The {HIGH_BRACKET_LABEL} bracket is {sizeRatio}× smaller, but converts {conversionRatio}× more efficiently:
+                    {" "}{highPct}% hold over $1K, vs only {lowPct}% of {LOW_BRACKET_LABEL} users.
+                  </>
+                );
+              })()}
             </Takeaway>
           </Panel></FadeIn>
         );
@@ -325,13 +335,17 @@ function BracketCard({
   bracket,
   label,
   tierName,
+  totalUsers,
   highlight,
 }: {
   bracket: BracketData;
   label: string;
   tierName: string;
+  totalUsers: number;
   highlight?: boolean;
 }) {
+  const sharePct = totalUsers > 0 ? (bracket.userCount / totalUsers) * 100 : 0;
+  const shareLabel = sharePct >= 1 ? `${sharePct.toFixed(0)}%` : `${sharePct.toFixed(1)}%`;
   return (
     <div
       className={`
@@ -356,7 +370,7 @@ function BracketCard({
       </div>
 
       <div className="space-y-3">
-        <Row label="Users" value={bracket.userCount.toLocaleString()} muted={highlight} />
+        <Row label="Users" value={`${bracket.userCount.toLocaleString()} (${shareLabel})`} muted={highlight} />
         <div className={`border-t ${highlight ? "border-background/10" : "border-border/50"}`} />
         <Row label="Median" value={`$${formatUSD(bracket.medianHoldings)}`} muted={highlight} large />
         <Row label="Avg" value={`$${formatUSD(bracket.avgHoldings)}`} muted={highlight} />
