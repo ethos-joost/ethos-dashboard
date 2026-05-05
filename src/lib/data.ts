@@ -1,4 +1,5 @@
 import pg from "pg";
+import { SPAM_TOTAL_CAP_USD, JUNK_PROFILE_IDS, NFT_VALUE_CAPS } from "./holdings-overrides";
 
 export interface StoredProfile {
   profileId: number;
@@ -80,6 +81,35 @@ const TIERS = [
   { label: "$1M+", min: 1_000_000, max: Infinity },
 ];
 
+// Apply hard cap, denylist, and per-profile NFT caps. Returns the profile
+// with sanitized holdings — does not mutate. Logs unknown suspicious entries
+// at build time so new junk surfaces in the build output.
+function sanitizeHoldings(p: StoredProfile): StoredProfile {
+  if (JUNK_PROFILE_IDS.has(p.profileId)) {
+    return { ...p, holdingsUSD: 0, holdingsEvm: 0, holdingsDefi: 0, holdingsNfts: 0 };
+  }
+  const total = p.holdingsUSD ?? 0;
+  if (total > SPAM_TOTAL_CAP_USD) {
+    return { ...p, holdingsUSD: 0, holdingsEvm: 0, holdingsDefi: 0, holdingsNfts: 0 };
+  }
+  const nftCap = NFT_VALUE_CAPS.get(p.profileId);
+  if (nftCap !== undefined && (p.holdingsNfts ?? 0) > nftCap) {
+    const evm = p.holdingsEvm ?? 0;
+    const hl = p.holdingsHyperliquid ?? 0;
+    return { ...p, holdingsNfts: nftCap, holdingsUSD: Math.round((evm + nftCap + hl) * 100) / 100 };
+  }
+  // Surface NFT-dominant outliers that aren't yet on the list — > $1M total,
+  // > 85% NFTs, < 5% verifiable non-NFT real assets.
+  const nfts = p.holdingsNfts ?? 0;
+  const realNonNft = (p.holdingsEvm ?? 0) + (p.holdingsHyperliquid ?? 0);
+  if (total > 1_000_000 && nfts > 0.85 * total && realNonNft < 0.05 * total) {
+    console.warn(
+      `[holdings] suspicious NFT-dominant profile (not in denylist): id=${p.profileId} ${p.displayName} score=${p.score} usd=$${total.toLocaleString()} nfts=${(nfts / total * 100).toFixed(0)}%`,
+    );
+  }
+  return p;
+}
+
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.floor(sorted.length * p);
@@ -133,7 +163,7 @@ async function fetchProfiles(): Promise<StoredProfile[]> {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const allProfiles = await fetchProfiles();
+  const allProfiles = (await fetchProfiles()).map(sanitizeHoldings);
 
   const bracketProfiles = new Map<string, StoredProfile[]>();
   const bracketValues = new Map<string, number[]>();
