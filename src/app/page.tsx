@@ -42,43 +42,58 @@ export default async function Home() {
         </header>
       </Panel>
 
-      {/* Headline + Stats: 2-col on desktop */}
+      {/* Why this matters + Coverage: 2-col on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-        {/* Headline takes 2/3 */}
-        {medianMultiplier && (
-          <FadeIn className="lg:col-span-2">
-            <Panel>
-              <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
-                Key Insight
-              </p>
-              <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
-                The typical user with a score{" "}
-                <span className="font-semibold">higher than <Score>1600</Score></span> has{" "}
-                <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">
-                  <CountUp value={medianMultiplier} decimals={1} suffix="x" />
-                </span>{" "}
-                the purchasing power of a user with a score{" "}
-                <span className="font-semibold">between <Score>{LOW_BRACKET_LABEL}</Score></span>
-              </p>
-            </Panel>
-          </FadeIn>
-        )}
+        {/* Why this matters takes 2/3 */}
+        <FadeIn className="lg:col-span-2 h-full">
+          <Panel className="h-full">
+            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
+              Why this matters
+            </p>
+            <p className="text-sm md:text-base text-foreground/80 leading-relaxed max-w-3xl">
+              In web3, marketing dollars get burned reaching users who never had the capital to convert.
+              Filtering by Ethos credibility lets teams stop inflating CAC on noise and reach buyers with
+              actual purchasing power — and because every score is tied to a real X account and wallet,
+              those qualified leads aren&apos;t just a stat on a chart, they&apos;re directly reachable.
+            </p>
+          </Panel>
+        </FadeIn>
 
-        {/* Stats takes 1/3 */}
+        {/* Coverage takes 1/3 */}
         <FadeIn delay={0.2} className="lg:col-span-1 h-full">
-        <Panel className="h-full">
-          <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4 md:mb-5">
-            Coverage
-          </p>
-          <div className="grid grid-cols-2 gap-3 md:gap-x-4 md:gap-y-6">
-            <Stat label="Profiles scanned" value={totalUsers.toLocaleString()} />
-            <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
-            <Stat label="Assets analyzed" value={`$${formatUSD(combinedAssets)}`} />
-            <Stat label="Wallets over $10K" value={walletsOver10K.toLocaleString()} />
-          </div>
-        </Panel>
+          <Panel className="h-full">
+            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-4 md:mb-5">
+              Coverage
+            </p>
+            <div className="grid grid-cols-2 gap-3 md:gap-x-4 md:gap-y-6">
+              <Stat label="Profiles scanned" value={totalUsers.toLocaleString()} />
+              <Stat label="With holdings" value={profilesWithHoldings.toLocaleString()} />
+              <Stat label="Assets analyzed" value={`$${formatUSD(combinedAssets)}`} />
+              <Stat label="Wallets over $10K" value={walletsOver10K.toLocaleString()} />
+            </div>
+          </Panel>
         </FadeIn>
       </div>
+
+      {/* Key Insight (full width) */}
+      {medianMultiplier && (
+        <FadeIn>
+          <Panel className="mb-4 md:mb-6">
+            <p className="font-mono text-xs tracking-widest uppercase text-muted-foreground mb-3 md:mb-4">
+              Key Insight
+            </p>
+            <p className="text-xl sm:text-2xl md:text-3xl font-light leading-snug text-foreground wrap-break-word">
+              The typical user with a score{" "}
+              <span className="font-semibold">higher than <Score>1600</Score></span> has{" "}
+              <span className="font-mono font-bold text-2xl sm:text-3xl md:text-4xl">
+                <CountUp value={medianMultiplier} decimals={1} suffix="x" />
+              </span>{" "}
+              the purchasing power of a user with a score{" "}
+              <span className="font-semibold">between <Score>{LOW_BRACKET_LABEL}</Score></span>
+            </p>
+          </Panel>
+        </FadeIn>
+      )}
 
       {/* Bracket cards: side-by-side */}
       {low && mid && high && (
